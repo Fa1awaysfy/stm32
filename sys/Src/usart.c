@@ -37,17 +37,12 @@ void _sys_exit(int x)
 //重定义fputc函数 
 int fputc(int ch, FILE *f)
 {
-    HAL_UART_Transmit(&UART1_Handler, (uint8_t *)&ch, 1, 0xffff);
-	return ch;
-}
-
-int fgetc(FILE *f)
-{
-    uint8_t ch = 0;
-    HAL_UART_Receive(&UART1_Handler, &ch, 1, 0xffff);
+    while((USART1->ISR&0X40)==0);//循环发送,直到发送完毕
+    USART1->TDR=(u8)ch;
     return ch;
 }
-#endif 
+#endif
+
 
 #if EN_USART1_RX   //如果使能了接收
 //串口1中断服务程序
@@ -60,25 +55,25 @@ u8 USART_RX_BUF[USART_REC_LEN];     //接收缓冲,最大USART_REC_LEN个字节.
 u16 USART_RX_STA=0;       //接收状态标记	
 
 u8 aRxBuffer[RXBUFFERSIZE];//HAL库使用的串口接收缓冲
-UART_HandleTypeDef UART1_Handler; //UART句柄
+//UART_HandleTypeDef UART1_Handler; //UART句柄
 
 //初始化IO 串口1 
 //bound:波特率
-void uart_init(u32 bound)
-{	
-	//UART 初始化设置
-	UART1_Handler.Instance=USART1;					    //USART1
-	UART1_Handler.Init.BaudRate=bound;				    //波特率
-	UART1_Handler.Init.WordLength=UART_WORDLENGTH_8B;   //字长为8位数据格式
-	UART1_Handler.Init.StopBits=UART_STOPBITS_1;	    //一个停止位
-	UART1_Handler.Init.Parity=UART_PARITY_NONE;		    //无奇偶校验位
-	UART1_Handler.Init.HwFlowCtl=UART_HWCONTROL_NONE;   //无硬件流控
-	UART1_Handler.Init.Mode=UART_MODE_TX_RX;		    //收发模式
-	HAL_UART_Init(&UART1_Handler);					    //HAL_UART_Init()会使能UART1
-	
-	HAL_UART_Receive_IT(&UART1_Handler, (u8 *)aRxBuffer, RXBUFFERSIZE);//该函数会开启接收中断：标志位UART_IT_RXNE，并且设置接收缓冲以及接收缓冲接收最大数据量
-  
-}
+//void uart_init(u32 bound)
+//{
+//	//UART 初始化设置
+//	UART1_Handler.Instance=USART1;					    //USART1
+//	UART1_Handler.Init.BaudRate=bound;				    //波特率
+//	UART1_Handler.Init.WordLength=UART_WORDLENGTH_8B;   //字长为8位数据格式
+//	UART1_Handler.Init.StopBits=UART_STOPBITS_1;	    //一个停止位
+//	UART1_Handler.Init.Parity=UART_PARITY_NONE;		    //无奇偶校验位
+//	UART1_Handler.Init.HwFlowCtl=UART_HWCONTROL_NONE;   //无硬件流控
+//	UART1_Handler.Init.Mode=UART_MODE_TX_RX;		    //收发模式
+//	HAL_UART_Init(&UART1_Handler);					    //HAL_UART_Init()会使能UART1
+//
+//	HAL_UART_Receive_IT(&UART1_Handler, (u8 *)aRxBuffer, RXBUFFERSIZE);//该函数会开启接收中断：标志位UART_IT_RXNE，并且设置接收缓冲以及接收缓冲接收最大数据量
+//
+//}
 
 //UART底层初始化，时钟使能，引脚配置，中断配置
 //此函数会被HAL_UART_Init()调用
@@ -114,10 +109,27 @@ void uart_init(u32 bound)
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
-    if(huart->Instance == USART1)
+    if(huart->Instance==USART1)//如果是串口1
     {
-        HAL_UART_Transmit(&UART1_Handler, aRxBuffer, 10, 100);    // 把收到的字节原样发送出去
-        HAL_UART_Receive_IT(&UART1_Handler, aRxBuffer, 10);
+        if((USART_RX_STA&0x8000)==0)//接收未完成
+        {
+            if(USART_RX_STA&0x4000)//接收到了0x0d
+            {
+                if(aRxBuffer[0]!=0x0a)USART_RX_STA=0;//接收错误,重新开始
+                else USART_RX_STA|=0x8000;	//接收完成了
+            }
+            else //还没收到0X0D
+            {
+                if(aRxBuffer[0]==0x0d)USART_RX_STA|=0x4000;
+                else
+                {
+                    USART_RX_BUF[USART_RX_STA&0X3FFF]=aRxBuffer[0] ;
+                    USART_RX_STA++;
+                    if(USART_RX_STA>(USART_REC_LEN-1))USART_RX_STA=0;//接收数据错误,重新开始接收
+                }
+            }
+        }
+
     }
 }
  

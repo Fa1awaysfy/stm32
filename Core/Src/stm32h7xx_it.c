@@ -213,14 +213,14 @@ void USART1_IRQHandler(void)
   HAL_UART_IRQHandler(&huart1);
   /* USER CODE BEGIN USART1_IRQn 1 */
     timeout=0;
-    while (HAL_UART_GetState(&UART1_Handler)!=HAL_UART_STATE_READY)//等待就绪
+    while (HAL_UART_GetState(&huart1)!=HAL_UART_STATE_READY)//等待就绪
     {
         timeout++;////超时处理
         if(timeout>maxDelay) break;
     }
 
     timeout=0;
-    while(HAL_UART_Receive_IT(&UART1_Handler,(u8 *)aRxBuffer, RXBUFFERSIZE)!=HAL_OK)//一次处理完成之后，重新开启中断并设置RxXferCount为1
+    while(HAL_UART_Receive_IT(&huart1,(u8 *)aRxBuffer, RXBUFFERSIZE)!=HAL_OK)//一次处理完成之后，重新开启中断并设置RxXferCount为1
     {
         timeout++; //超时处理
         if(timeout>maxDelay) break;
