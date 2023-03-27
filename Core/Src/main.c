@@ -56,7 +56,8 @@ static void MX_USART1_UART_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
+#define LED0(n) (n ? HAL_GPIO_WritePin(GPIOF,GPIO_PIN_9,GPIO_PIN_SET): \
+                HAL_GPIO_WritePin(GPIOF,GPIO_PIN_9,GPIO_PIN_RESET))
 /* USER CODE END 0 */
 
 /**
@@ -76,7 +77,7 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-    Cache_Enable();                 //打开L1-Cache
+  Cache_Enable();                 //打开L1-Cache
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -100,26 +101,33 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-      if(USART_RX_STA&0x8000)
-      {
-          len=USART_RX_STA&0x3fff;//得到此次接收到的数据长度
-          printf("\r\n您发送的消息为:\r\n");
-          HAL_UART_Transmit(&huart1,(uint8_t*)USART_RX_BUF,len,1000);	//发送接收到的数据
-          while(__HAL_UART_GET_FLAG(&huart1,UART_FLAG_TC)!=SET);		//等待发送结束
-          printf("\r\n\r\n");//插入换行
-          USART_RX_STA=0;
-      }else
-      {
-          times++;
-          if(times%5000==0)
-          {
-              printf("\r\nALIENTEK STM32H7开发板 串口实验\r\n");
-              printf("正点原子@ALIENTEK\r\n\r\n\r\n");
-          }
-          if(times%200==0)printf("请输入数据,以回车键结束\r\n");
-//          if(times%30==0)LED0_Toggle;//闪烁LED,提示系统正在运行.
-          delay_ms(10);
-      }
+      HAL_GPIO_WritePin(GPIOF, GPIO_PIN_6, GPIO_PIN_SET);
+      //1
+      delay_ms(1);
+      HAL_GPIO_WritePin(GPIOF, GPIO_PIN_7, GPIO_PIN_SET);
+      //2
+      delay_ms(1);
+      HAL_GPIO_WritePin(GPIOF, GPIO_PIN_6, GPIO_PIN_RESET);
+      //3
+      delay_ms(1);
+      HAL_GPIO_WritePin(GPIOF, GPIO_PIN_8, GPIO_PIN_SET);
+      //4
+      delay_ms(1);
+      HAL_GPIO_WritePin(GPIOF, GPIO_PIN_7, GPIO_PIN_RESET);
+      //5
+      delay_ms(1);
+      HAL_GPIO_WritePin(GPIOF, GPIO_PIN_9, GPIO_PIN_SET);
+      //6
+      delay_ms(1);
+      HAL_GPIO_WritePin(GPIOF, GPIO_PIN_8, GPIO_PIN_RESET);
+      //7
+      delay_ms(1);
+      HAL_GPIO_WritePin(GPIOF, GPIO_PIN_6, GPIO_PIN_SET);
+      //8
+      delay_ms(1);
+      HAL_GPIO_WritePin(GPIOF, GPIO_PIN_9, GPIO_PIN_RESET);
+
+
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
@@ -230,9 +238,21 @@ static void MX_USART1_UART_Init(void)
   */
 static void MX_GPIO_Init(void)
 {
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
 
   /* GPIO Ports Clock Enable */
+  __HAL_RCC_GPIOF_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOF, GPIO_PIN_6|GPIO_PIN_7|GPIO_PIN_8|GPIO_PIN_9, GPIO_PIN_RESET);
+
+  /*Configure GPIO pins : PF6 PF7 PF8 PF9 */
+  GPIO_InitStruct.Pin = GPIO_PIN_6|GPIO_PIN_7|GPIO_PIN_8|GPIO_PIN_9;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+  HAL_GPIO_Init(GPIOF, &GPIO_InitStruct);
 
 }
 
