@@ -93,7 +93,7 @@ int main(void)
   /* USER CODE BEGIN SysInit */
 
 //    Stm32_Clock_Init(160,5,2,4);    //设置时钟,400Mhz
-    delay_init(400);				//延时初始化
+//    delay_init(400);				//延时初始化
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */

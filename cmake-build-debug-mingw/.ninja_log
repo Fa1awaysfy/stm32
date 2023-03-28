@@ -47,3 +47,7 @@
 162	316	7016918598281572	stm32pg.elf	e8860e611029579d
 1	158	7016918805531587	CMakeFiles/stm32pg.elf.dir/Core/Src/main.c.obj	d0bb18576f351ce0
 158	310	7016918806608704	stm32pg.elf	e8860e611029579d
+9	154	7016956978561377	CMakeFiles/stm32pg.elf.dir/Core/Src/stm32h7xx_it.c.obj	7d9c0bb64e00cd41
+6	155	7016956978571358	CMakeFiles/stm32pg.elf.dir/Core/Src/stm32h7xx_hal_msp.c.obj	19ac3fafd0368384
+1	158	7016956978591301	CMakeFiles/stm32pg.elf.dir/Core/Src/main.c.obj	d0bb18576f351ce0
+158	320	7016956979768150	stm32pg.elf	e8860e611029579d
