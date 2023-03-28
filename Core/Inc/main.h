@@ -33,8 +33,8 @@ extern "C" {
 /* USER CODE BEGIN Includes */
 #include "stdio.h"
 #include "../../sys/Inc/delay.h"
-#include "../../sys/Inc/usart.h"
-#include "../../sys/Inc/sys.h"
+//#include "../../sys/Inc/usart.h"
+//#include "../../sys/Inc/sys.h"
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/

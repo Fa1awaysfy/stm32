@@ -53,7 +53,7 @@ include_directories(Core/Inc Drivers/STM32H7xx_HAL_Driver/Inc Drivers/STM32H7xx_
 
 add_definitions(-DDEBUG -DUSE_HAL_DRIVER -DSTM32H743xx)
 
-file(GLOB_RECURSE SOURCES "Core/*.*" "Drivers/*.*" "sys/*.*")
+file(GLOB_RECURSE SOURCES "Core/*.*" "Drivers/*.*" "sys/delay.*")
 
 set(LINKER_SCRIPT ${CMAKE_SOURCE_DIR}/STM32H743IITX_FLASH.ld)
 
