@@ -20,33 +20,42 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="5b5a7a2f-a1d6-4923-a5f9-27fb17139579" name="变更" comment="v0.31 can connection">
+    <list default="true" id="5b5a7a2f-a1d6-4923-a5f9-27fb17139579" name="变更" comment="v0.312 can connection(laptop test)">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmake-build-debug-mingw/.cmake/api/v1/reply/cache-v2-e4b3cb3ef48e5294f3dd.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmake-build-debug-mingw/.cmake/api/v1/reply/cmakeFiles-v1-e0e88a0687144dec6ba1.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmake-build-debug-mingw/.cmake/api/v1/reply/codemodel-v2-285265089a4cc4e78882.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmake-build-debug-mingw/.cmake/api/v1/reply/index-2023-03-28T07-14-46-0198.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmake-build-debug-mingw/.cmake/api/v1/reply/target-stm32pg.elf-Debug-675ea5bd836c763f51b1.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmake-build-debug-mingw/.cmake/api/v1/reply/toolchains-v1-09cfa7751c3f3a5f08c3.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.mxproject" beforeDir="false" afterPath="$PROJECT_DIR$/.mxproject" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/CMakeLists.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Core/Inc/stm32h7xx_hal_conf.h" beforeDir="false" afterPath="$PROJECT_DIR$/Core/Inc/stm32h7xx_hal_conf.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Core/Inc/stm32h7xx_it.h" beforeDir="false" afterPath="$PROJECT_DIR$/Core/Inc/stm32h7xx_it.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Core/Src/main.c" beforeDir="false" afterPath="$PROJECT_DIR$/Core/Src/main.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Core/Src/stm32h7xx_hal_msp.c" beforeDir="false" afterPath="$PROJECT_DIR$/Core/Src/stm32h7xx_hal_msp.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Core/Src/stm32h7xx_it.c" beforeDir="false" afterPath="$PROJECT_DIR$/Core/Src/stm32h7xx_it.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmake-build-debug-mingw/.cmake/api/v1/reply/cache-v2-5345276ccd69138ea244.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmake-build-debug-mingw/.cmake/api/v1/reply/cmakeFiles-v1-706f5852c2d38fe123a8.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmake-build-debug-mingw/.cmake/api/v1/reply/codemodel-v2-6215f45bfd989ab6d74c.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmake-build-debug-mingw/.cmake/api/v1/reply/directory-.-Debug-d0094a50bb2071803777.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmake-build-debug-mingw/.cmake/api/v1/reply/index-2023-03-30T06-58-30-0986.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmake-build-debug-mingw/.cmake/api/v1/reply/target-stm32pg.elf-Debug-a49b8adbfec1e09bb39c.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmake-build-debug-mingw/.cmake/api/v1/reply/toolchains-v1-cf4b8a788053842b5957.json" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/cmake-build-debug-mingw/.ninja_deps" beforeDir="false" afterPath="$PROJECT_DIR$/cmake-build-debug-mingw/.ninja_deps" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/cmake-build-debug-mingw/.ninja_log" beforeDir="false" afterPath="$PROJECT_DIR$/cmake-build-debug-mingw/.ninja_log" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmake-build-debug-mingw/CMakeCache.txt" beforeDir="false" afterPath="$PROJECT_DIR$/cmake-build-debug-mingw/CMakeCache.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmake-build-debug-mingw/CMakeFiles/3.24.2/CMakeASMCompiler.cmake" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmake-build-debug-mingw/CMakeFiles/3.24.2/CMakeCCompiler.cmake" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmake-build-debug-mingw/CMakeFiles/3.24.2/CMakeCXXCompiler.cmake" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmake-build-debug-mingw/CMakeFiles/3.24.2/CMakeDetermineCompilerABI_C.bin" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmake-build-debug-mingw/CMakeFiles/3.24.2/CMakeDetermineCompilerABI_CXX.bin" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmake-build-debug-mingw/CMakeFiles/3.24.2/CMakeSystem.cmake" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmake-build-debug-mingw/CMakeFiles/3.24.2/CompilerIdC/CMakeCCompilerId.c" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmake-build-debug-mingw/CMakeFiles/3.24.2/CompilerIdC/CMakeCCompilerId.o" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmake-build-debug-mingw/CMakeFiles/3.24.2/CompilerIdCXX/CMakeCXXCompilerId.cpp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmake-build-debug-mingw/CMakeFiles/3.24.2/CompilerIdCXX/CMakeCXXCompilerId.o" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmake-build-debug-mingw/CMakeFiles/CMakeError.log" beforeDir="false" afterPath="$PROJECT_DIR$/cmake-build-debug-mingw/CMakeFiles/CMakeError.log" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmake-build-debug-mingw/CMakeFiles/CMakeOutput.log" beforeDir="false" afterPath="$PROJECT_DIR$/cmake-build-debug-mingw/CMakeFiles/CMakeOutput.log" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmake-build-debug-mingw/CMakeFiles/TargetDirectories.txt" beforeDir="false" afterPath="$PROJECT_DIR$/cmake-build-debug-mingw/CMakeFiles/TargetDirectories.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmake-build-debug-mingw/CMakeFiles/clion-Debug-MinGW-log.txt" beforeDir="false" afterPath="$PROJECT_DIR$/cmake-build-debug-mingw/CMakeFiles/clion-Debug-MinGW-log.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmake-build-debug-mingw/CMakeFiles/clion-environment.txt" beforeDir="false" afterPath="$PROJECT_DIR$/cmake-build-debug-mingw/CMakeFiles/clion-environment.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmake-build-debug-mingw/CMakeFiles/rules.ninja" beforeDir="false" afterPath="$PROJECT_DIR$/cmake-build-debug-mingw/CMakeFiles/rules.ninja" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmake-build-debug-mingw/CMakeCache.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmake-build-debug-mingw/CMakeFiles/3.25.2/CMakeASMCompiler.cmake" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmake-build-debug-mingw/CMakeFiles/3.25.2/CMakeCCompiler.cmake" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmake-build-debug-mingw/CMakeFiles/3.25.2/CMakeCXXCompiler.cmake" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmake-build-debug-mingw/CMakeFiles/3.25.2/CMakeDetermineCompilerABI_C.bin" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmake-build-debug-mingw/CMakeFiles/3.25.2/CMakeDetermineCompilerABI_CXX.bin" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmake-build-debug-mingw/CMakeFiles/3.25.2/CMakeSystem.cmake" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmake-build-debug-mingw/CMakeFiles/3.25.2/CompilerIdC/CMakeCCompilerId.c" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmake-build-debug-mingw/CMakeFiles/3.25.2/CompilerIdC/CMakeCCompilerId.o" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmake-build-debug-mingw/CMakeFiles/3.25.2/CompilerIdCXX/CMakeCXXCompilerId.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmake-build-debug-mingw/CMakeFiles/3.25.2/CompilerIdCXX/CMakeCXXCompilerId.o" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmake-build-debug-mingw/CMakeFiles/CMakeError.log" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmake-build-debug-mingw/CMakeFiles/CMakeOutput.log" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmake-build-debug-mingw/CMakeFiles/TargetDirectories.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmake-build-debug-mingw/CMakeFiles/clion-Debug-MinGW-log.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmake-build-debug-mingw/CMakeFiles/clion-environment.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmake-build-debug-mingw/CMakeFiles/cmake.check_cache" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmake-build-debug-mingw/CMakeFiles/rules.ninja" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/cmake-build-debug-mingw/CMakeFiles/stm32pg.elf.dir/Core/Src/main.c.obj" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/cmake-build-debug-mingw/CMakeFiles/stm32pg.elf.dir/Core/Src/stm32h7xx_hal_msp.c.obj" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/cmake-build-debug-mingw/CMakeFiles/stm32pg.elf.dir/Core/Src/stm32h7xx_it.c.obj" beforeDir="false" />
@@ -75,7 +84,7 @@
       <change beforePath="$PROJECT_DIR$/cmake-build-debug-mingw/CMakeFiles/stm32pg.elf.dir/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_tim_ex.c.obj" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/cmake-build-debug-mingw/CMakeFiles/stm32pg.elf.dir/sys/Src/delay.c.obj" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/cmake-build-debug-mingw/build.ninja" beforeDir="false" afterPath="$PROJECT_DIR$/cmake-build-debug-mingw/build.ninja" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmake-build-debug-mingw/cmake_install.cmake" beforeDir="false" afterPath="$PROJECT_DIR$/cmake-build-debug-mingw/cmake_install.cmake" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/stm32pg.ioc" beforeDir="false" afterPath="$PROJECT_DIR$/stm32pg.ioc" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -138,13 +147,18 @@
     </key>
   </component>
   <component name="RunManager" selected="OpenOCD 下载并运行.stm32pg.elf">
+    <configuration default="true" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" PASS_PARENT_ENVS_2="true">
+      <method v="2">
+        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
     <configuration name="stm32pg.elf" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="stm32pg" TARGET_NAME="stm32pg.elf" CONFIG_NAME="Debug-MinGW" RUN_TARGET_PROJECT_NAME="stm32pg" RUN_TARGET_NAME="stm32pg.elf">
       <method v="2">
         <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
       </method>
     </configuration>
     <configuration name="stm32pg.elf" type="com.jetbrains.cidr.embedded.openocd.conf.type" factoryName="com.jetbrains.cidr.embedded.openocd.conf.factory" nameIsGenerated="true" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="stm32pg" TARGET_NAME="stm32pg.elf" CONFIG_NAME="Debug-MinGW" version="1" RUN_TARGET_PROJECT_NAME="stm32pg" RUN_TARGET_NAME="stm32pg.elf">
-      <openocd version="1" gdb-port="3333" telnet-port="4444" board-config="E:\stm32pg\config\stlink.cfg" reset-type="INIT" download-type="UPDATED_ONLY">
+      <openocd version="1" gdb-port="3333" telnet-port="4444" board-config="F:\c\github\config\stlink.cfg" reset-type="INIT" download-type="UPDATED_ONLY">
         <debugger kind="GDB" isBundled="true" />
       </openocd>
       <method v="2">
@@ -187,7 +201,7 @@
       <workItem from="1679914532416" duration="5926000" />
       <workItem from="1679981267816" duration="10573000" />
       <workItem from="1680159508476" duration="92000" />
-      <workItem from="1680159986724" duration="4000" />
+      <workItem from="1680159986724" duration="621000" />
     </task>
     <task id="LOCAL-00001" summary="v0.1">
       <created>1679889984679</created>
@@ -224,7 +238,14 @@
       <option name="project" value="LOCAL" />
       <updated>1679988726908</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="v0.312 can connection(laptop test)">
+      <created>1680160074621</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1680160074621</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -232,6 +253,12 @@
   </component>
   <component name="UnknownFeatures">
     <option featureType="com.intellij.fileTypeFactory" implementationName="*.cfg" />
+  </component>
+  <component name="VCPKGProject">
+    <isAutomaticEditVcpkgJson value="false" />
+    <isAutomaticCheckingOnLaunch value="false" />
+    <isAutomaticFoundErrors value="true" />
+    <isAutomaticFoundErrors value="true" />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
     <option name="TAB_STATES">
@@ -261,6 +288,7 @@
     <MESSAGE value="v0.2" />
     <MESSAGE value="v0.3" />
     <MESSAGE value="v0.31 can connection" />
-    <option name="LAST_COMMIT_MESSAGE" value="v0.31 can connection" />
+    <MESSAGE value="v0.312 can connection(laptop test)" />
+    <option name="LAST_COMMIT_MESSAGE" value="v0.312 can connection(laptop test)" />
   </component>
 </project>

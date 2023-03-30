@@ -9,7 +9,7 @@
 					"jsonFile" : "directory-.-Debug-d0094a50bb2071803777.json",
 					"minimumCMakeVersion" : 
 					{
-						"string" : "3.24"
+						"string" : "3.25"
 					},
 					"projectIndex" : 0,
 					"source" : ".",
@@ -39,7 +39,7 @@
 				{
 					"directoryIndex" : 0,
 					"id" : "stm32pg.elf::@6890427a1f51a3e7e1df",
-					"jsonFile" : "target-stm32pg.elf-Debug-a49b8adbfec1e09bb39c.json",
+					"jsonFile" : "target-stm32pg.elf-Debug-f1fe93d905cb017ff47f.json",
 					"name" : "stm32pg.elf",
 					"projectIndex" : 0
 				}

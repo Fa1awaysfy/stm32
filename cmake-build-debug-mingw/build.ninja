@@ -289,6 +289,26 @@ build CMakeFiles/stm32pg.elf.dir/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_
   TARGET_COMPILE_PDB = CMakeFiles\stm32pg.elf.dir\
   TARGET_PDB = stm32pg.elf.pdb
 
+build CMakeFiles/stm32pg.elf.dir/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_spi.c.obj: C_COMPILER__stm32pg.2eelf_Debug F$:/c/github/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_spi.c || cmake_object_order_depends_target_stm32pg.elf
+  DEFINES = -DDEBUG -DSTM32H743xx -DUSE_HAL_DRIVER
+  DEP_FILE = CMakeFiles\stm32pg.elf.dir\Drivers\STM32H7xx_HAL_Driver\Src\stm32h7xx_hal_spi.c.obj.d
+  FLAGS = -g -fdiagnostics-color=always -mcpu=cortex-m7 -mthumb -mthumb-interwork -ffunction-sections -fdata-sections -fno-common -fmessage-length=0 -Og -g -std=gnu11
+  INCLUDES = -IF:/c/github/Core/Inc -IF:/c/github/Drivers/STM32H7xx_HAL_Driver/Inc -IF:/c/github/Drivers/STM32H7xx_HAL_Driver/Inc/Legacy -IF:/c/github/Drivers/CMSIS/Device/ST/STM32H7xx/Include -IF:/c/github/Drivers/CMSIS/Include
+  OBJECT_DIR = CMakeFiles\stm32pg.elf.dir
+  OBJECT_FILE_DIR = CMakeFiles\stm32pg.elf.dir\Drivers\STM32H7xx_HAL_Driver\Src
+  TARGET_COMPILE_PDB = CMakeFiles\stm32pg.elf.dir\
+  TARGET_PDB = stm32pg.elf.pdb
+
+build CMakeFiles/stm32pg.elf.dir/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_spi_ex.c.obj: C_COMPILER__stm32pg.2eelf_Debug F$:/c/github/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_spi_ex.c || cmake_object_order_depends_target_stm32pg.elf
+  DEFINES = -DDEBUG -DSTM32H743xx -DUSE_HAL_DRIVER
+  DEP_FILE = CMakeFiles\stm32pg.elf.dir\Drivers\STM32H7xx_HAL_Driver\Src\stm32h7xx_hal_spi_ex.c.obj.d
+  FLAGS = -g -fdiagnostics-color=always -mcpu=cortex-m7 -mthumb -mthumb-interwork -ffunction-sections -fdata-sections -fno-common -fmessage-length=0 -Og -g -std=gnu11
+  INCLUDES = -IF:/c/github/Core/Inc -IF:/c/github/Drivers/STM32H7xx_HAL_Driver/Inc -IF:/c/github/Drivers/STM32H7xx_HAL_Driver/Inc/Legacy -IF:/c/github/Drivers/CMSIS/Device/ST/STM32H7xx/Include -IF:/c/github/Drivers/CMSIS/Include
+  OBJECT_DIR = CMakeFiles\stm32pg.elf.dir
+  OBJECT_FILE_DIR = CMakeFiles\stm32pg.elf.dir\Drivers\STM32H7xx_HAL_Driver\Src
+  TARGET_COMPILE_PDB = CMakeFiles\stm32pg.elf.dir\
+  TARGET_PDB = stm32pg.elf.pdb
+
 build CMakeFiles/stm32pg.elf.dir/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_tim.c.obj: C_COMPILER__stm32pg.2eelf_Debug F$:/c/github/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_tim.c || cmake_object_order_depends_target_stm32pg.elf
   DEFINES = -DDEBUG -DSTM32H743xx -DUSE_HAL_DRIVER
   DEP_FILE = CMakeFiles\stm32pg.elf.dir\Drivers\STM32H7xx_HAL_Driver\Src\stm32h7xx_hal_tim.c.obj.d
@@ -309,16 +329,6 @@ build CMakeFiles/stm32pg.elf.dir/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_
   TARGET_COMPILE_PDB = CMakeFiles\stm32pg.elf.dir\
   TARGET_PDB = stm32pg.elf.pdb
 
-build CMakeFiles/stm32pg.elf.dir/sys/Src/delay.c.obj: C_COMPILER__stm32pg.2eelf_Debug F$:/c/github/sys/Src/delay.c || cmake_object_order_depends_target_stm32pg.elf
-  DEFINES = -DDEBUG -DSTM32H743xx -DUSE_HAL_DRIVER
-  DEP_FILE = CMakeFiles\stm32pg.elf.dir\sys\Src\delay.c.obj.d
-  FLAGS = -g -fdiagnostics-color=always -mcpu=cortex-m7 -mthumb -mthumb-interwork -ffunction-sections -fdata-sections -fno-common -fmessage-length=0 -Og -g -std=gnu11
-  INCLUDES = -IF:/c/github/Core/Inc -IF:/c/github/Drivers/STM32H7xx_HAL_Driver/Inc -IF:/c/github/Drivers/STM32H7xx_HAL_Driver/Inc/Legacy -IF:/c/github/Drivers/CMSIS/Device/ST/STM32H7xx/Include -IF:/c/github/Drivers/CMSIS/Include
-  OBJECT_DIR = CMakeFiles\stm32pg.elf.dir
-  OBJECT_FILE_DIR = CMakeFiles\stm32pg.elf.dir\sys\Src
-  TARGET_COMPILE_PDB = CMakeFiles\stm32pg.elf.dir\
-  TARGET_PDB = stm32pg.elf.pdb
-
 
 # =============================================================================
 # Link build statements for EXECUTABLE target stm32pg.elf
@@ -327,7 +337,7 @@ build CMakeFiles/stm32pg.elf.dir/sys/Src/delay.c.obj: C_COMPILER__stm32pg.2eelf_
 #############################################
 # Link the executable stm32pg.elf
 
-build stm32pg.elf: C_EXECUTABLE_LINKER__stm32pg.2eelf_Debug CMakeFiles/stm32pg.elf.dir/Core/Src/main.c.obj CMakeFiles/stm32pg.elf.dir/Core/Src/stm32h7xx_hal_msp.c.obj CMakeFiles/stm32pg.elf.dir/Core/Src/stm32h7xx_it.c.obj CMakeFiles/stm32pg.elf.dir/Core/Src/syscalls.c.obj CMakeFiles/stm32pg.elf.dir/Core/Src/sysmem.c.obj CMakeFiles/stm32pg.elf.dir/Core/Src/system_stm32h7xx.c.obj CMakeFiles/stm32pg.elf.dir/Core/Startup/startup_stm32h743iitx.s.obj CMakeFiles/stm32pg.elf.dir/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal.c.obj CMakeFiles/stm32pg.elf.dir/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_cortex.c.obj CMakeFiles/stm32pg.elf.dir/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_dma.c.obj CMakeFiles/stm32pg.elf.dir/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_dma_ex.c.obj CMakeFiles/stm32pg.elf.dir/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_exti.c.obj CMakeFiles/stm32pg.elf.dir/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_fdcan.c.obj CMakeFiles/stm32pg.elf.dir/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_flash.c.obj CMakeFiles/stm32pg.elf.dir/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_flash_ex.c.obj CMakeFiles/stm32pg.elf.dir/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_gpio.c.obj CMakeFiles/stm32pg.elf.dir/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_hsem.c.obj CMakeFiles/stm32pg.elf.dir/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_i2c.c.obj CMakeFiles/stm32pg.elf.dir/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_i2c_ex.c.obj CMakeFiles/stm32pg.elf.dir/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_mdma.c.obj CMakeFiles/stm32pg.elf.dir/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_pwr.c.obj CMakeFiles/stm32pg.elf.dir/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_pwr_ex.c.obj CMakeFiles/stm32pg.elf.dir/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_rcc.c.obj CMakeFiles/stm32pg.elf.dir/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_rcc_ex.c.obj CMakeFiles/stm32pg.elf.dir/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_tim.c.obj CMakeFiles/stm32pg.elf.dir/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_tim_ex.c.obj CMakeFiles/stm32pg.elf.dir/sys/Src/delay.c.obj
+build stm32pg.elf: C_EXECUTABLE_LINKER__stm32pg.2eelf_Debug CMakeFiles/stm32pg.elf.dir/Core/Src/main.c.obj CMakeFiles/stm32pg.elf.dir/Core/Src/stm32h7xx_hal_msp.c.obj CMakeFiles/stm32pg.elf.dir/Core/Src/stm32h7xx_it.c.obj CMakeFiles/stm32pg.elf.dir/Core/Src/syscalls.c.obj CMakeFiles/stm32pg.elf.dir/Core/Src/sysmem.c.obj CMakeFiles/stm32pg.elf.dir/Core/Src/system_stm32h7xx.c.obj CMakeFiles/stm32pg.elf.dir/Core/Startup/startup_stm32h743iitx.s.obj CMakeFiles/stm32pg.elf.dir/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal.c.obj CMakeFiles/stm32pg.elf.dir/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_cortex.c.obj CMakeFiles/stm32pg.elf.dir/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_dma.c.obj CMakeFiles/stm32pg.elf.dir/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_dma_ex.c.obj CMakeFiles/stm32pg.elf.dir/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_exti.c.obj CMakeFiles/stm32pg.elf.dir/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_fdcan.c.obj CMakeFiles/stm32pg.elf.dir/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_flash.c.obj CMakeFiles/stm32pg.elf.dir/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_flash_ex.c.obj CMakeFiles/stm32pg.elf.dir/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_gpio.c.obj CMakeFiles/stm32pg.elf.dir/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_hsem.c.obj CMakeFiles/stm32pg.elf.dir/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_i2c.c.obj CMakeFiles/stm32pg.elf.dir/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_i2c_ex.c.obj CMakeFiles/stm32pg.elf.dir/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_mdma.c.obj CMakeFiles/stm32pg.elf.dir/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_pwr.c.obj CMakeFiles/stm32pg.elf.dir/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_pwr_ex.c.obj CMakeFiles/stm32pg.elf.dir/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_rcc.c.obj CMakeFiles/stm32pg.elf.dir/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_rcc_ex.c.obj CMakeFiles/stm32pg.elf.dir/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_spi.c.obj CMakeFiles/stm32pg.elf.dir/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_spi_ex.c.obj CMakeFiles/stm32pg.elf.dir/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_tim.c.obj CMakeFiles/stm32pg.elf.dir/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_tim_ex.c.obj
   FLAGS = -g
   LINK_FLAGS = -Wl,-gc-sections,--print-memory-usage,-Map=F:/c/github/cmake-build-debug-mingw/stm32pg.map -mcpu=cortex-m7 -mthumb -mthumb-interwork -T F:/c/github/STM32H743IITX_FLASH.ld
   OBJECT_DIR = CMakeFiles\stm32pg.elf.dir
