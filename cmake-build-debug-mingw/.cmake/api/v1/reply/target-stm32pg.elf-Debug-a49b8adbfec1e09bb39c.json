@@ -154,23 +154,23 @@
 			[
 				{
 					"backtrace" : 10,
-					"path" : "E:/stm32pg/Core/Inc"
+					"path" : "F:/c/github/Core/Inc"
 				},
 				{
 					"backtrace" : 10,
-					"path" : "E:/stm32pg/Drivers/STM32H7xx_HAL_Driver/Inc"
+					"path" : "F:/c/github/Drivers/STM32H7xx_HAL_Driver/Inc"
 				},
 				{
 					"backtrace" : 10,
-					"path" : "E:/stm32pg/Drivers/STM32H7xx_HAL_Driver/Inc/Legacy"
+					"path" : "F:/c/github/Drivers/STM32H7xx_HAL_Driver/Inc/Legacy"
 				},
 				{
 					"backtrace" : 10,
-					"path" : "E:/stm32pg/Drivers/CMSIS/Device/ST/STM32H7xx/Include"
+					"path" : "F:/c/github/Drivers/CMSIS/Device/ST/STM32H7xx/Include"
 				},
 				{
 					"backtrace" : 10,
-					"path" : "E:/stm32pg/Drivers/CMSIS/Include"
+					"path" : "F:/c/github/Drivers/CMSIS/Include"
 				}
 			],
 			"language" : "C",
@@ -282,23 +282,23 @@
 			[
 				{
 					"backtrace" : 10,
-					"path" : "E:/stm32pg/Core/Inc"
+					"path" : "F:/c/github/Core/Inc"
 				},
 				{
 					"backtrace" : 10,
-					"path" : "E:/stm32pg/Drivers/STM32H7xx_HAL_Driver/Inc"
+					"path" : "F:/c/github/Drivers/STM32H7xx_HAL_Driver/Inc"
 				},
 				{
 					"backtrace" : 10,
-					"path" : "E:/stm32pg/Drivers/STM32H7xx_HAL_Driver/Inc/Legacy"
+					"path" : "F:/c/github/Drivers/STM32H7xx_HAL_Driver/Inc/Legacy"
 				},
 				{
 					"backtrace" : 10,
-					"path" : "E:/stm32pg/Drivers/CMSIS/Device/ST/STM32H7xx/Include"
+					"path" : "F:/c/github/Drivers/CMSIS/Device/ST/STM32H7xx/Include"
 				},
 				{
 					"backtrace" : 10,
-					"path" : "E:/stm32pg/Drivers/CMSIS/Include"
+					"path" : "F:/c/github/Drivers/CMSIS/Include"
 				}
 			],
 			"language" : "ASM",
@@ -323,7 +323,7 @@
 			},
 			{
 				"backtrace" : 2,
-				"fragment" : "-Wl,-gc-sections,--print-memory-usage,-Map=E:/stm32pg/cmake-build-debug-mingw/stm32pg.map",
+				"fragment" : "-Wl,-gc-sections,--print-memory-usage,-Map=F:/c/github/cmake-build-debug-mingw/stm32pg.map",
 				"role" : "flags"
 			},
 			{
@@ -348,7 +348,7 @@
 			},
 			{
 				"backtrace" : 4,
-				"fragment" : "E:/stm32pg/STM32H743IITX_FLASH.ld",
+				"fragment" : "F:/c/github/STM32H743IITX_FLASH.ld",
 				"role" : "flags"
 			}
 		],
