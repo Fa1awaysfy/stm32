@@ -40,11 +40,9 @@
 
 /* Private variables ---------------------------------------------------------*/
 
-FDCAN_HandleTypeDef hfdcan1;
-FDCAN_HandleTypeDef hfdcan2;
+QSPI_HandleTypeDef hqspi;
 
-SPI_HandleTypeDef hspi1;
-SPI_HandleTypeDef hspi2;
+UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
 
@@ -53,10 +51,8 @@ SPI_HandleTypeDef hspi2;
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
-static void MX_FDCAN1_Init(void);
-static void MX_FDCAN2_Init(void);
-static void MX_SPI1_Init(void);
-static void MX_SPI2_Init(void);
+static void MX_QUADSPI_Init(void);
+static void MX_USART1_UART_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -64,14 +60,18 @@ static void MX_SPI2_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-FDCAN_RxHeaderTypeDef FDCAN_RxHeader;
-FDCAN_TxHeaderTypeDef FDCAN_TxHeader;
+static uint8_t led0sta = 0,led1sta = 0;
 #define LED0RED(n) (n ? HAL_GPIO_WritePin(GPIOB,GPIO_PIN_0,GPIO_PIN_SET): \
-                HAL_GPIO_WritePin(GPIOB,GPIO_PIN_0,GPIO_PIN_RESET)) //获取led0的状态
+                HAL_GPIO_WritePin(GPIOB,GPIO_PIN_0,GPIO_PIN_RESET)) //led0
 #define LED1GREEN(n) (n ? HAL_GPIO_WritePin(GPIOB,GPIO_PIN_1,GPIO_PIN_SET): \
-                HAL_GPIO_WritePin(GPIOB,GPIO_PIN_1,GPIO_PIN_RESET)) //获取led1的状态
-#define KEY0 HAL_GPIO_ReadPin(GPIOH,GPIO_PIN_3) //KEY0 按键 PH3
-#define KEY1 HAL_GPIO_ReadPin(GPIOH,GPIO_PIN_2) //KEY1 按键 PH2
+                HAL_GPIO_WritePin(GPIOB,GPIO_PIN_1,GPIO_PIN_RESET)) //led1
+#define KEY_UP HAL_GPIO_ReadPin(GPIOA,GPIO_PIN_0) //KEY_UP  PA0
+#define KEY0 HAL_GPIO_ReadPin(GPIOH,GPIO_PIN_3) //KEY0  PH3
+#define KEY1 HAL_GPIO_ReadPin(GPIOH,GPIO_PIN_2) //KEY1  PH2
+#define KEY2 HAL_GPIO_ReadPin(GPIOC,GPIO_PIN_13) //KEY1  PC13
+
+
+
 /* USER CODE END 0 */
 
 /**
@@ -81,8 +81,6 @@ FDCAN_TxHeaderTypeDef FDCAN_TxHeader;
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-//    u8 len;
-//    u16 times=0;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -91,7 +89,7 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-//  Cache_Enable();                 //打开L1-Cache
+    RetargetInit(&huart1);
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -99,18 +97,14 @@ int main(void)
 
   /* USER CODE BEGIN SysInit */
 
-//    Stm32_Clock_Init(160,5,2,4);    //设置时钟,400Mhz
-//    delay_init(400);				//延时初始化
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_FDCAN1_Init();
-  MX_FDCAN2_Init();
-  MX_SPI1_Init();
-  MX_SPI2_Init();
+  MX_QUADSPI_Init();
+  MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
-//  UART_Start_Receive_IT(&huart1,(uint8_t *)&aRxBuffer,RXBUFFERSIZE);
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -120,6 +114,8 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+    printf("OK\r\n");
+    HAL_Delay(1000);
   }
   /* USER CODE END 3 */
 }
@@ -149,16 +145,7 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
   RCC_OscInitStruct.HSIState = RCC_HSI_DIV1;
   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
-  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
-  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
-  RCC_OscInitStruct.PLL.PLLM = 4;
-  RCC_OscInitStruct.PLL.PLLN = 9;
-  RCC_OscInitStruct.PLL.PLLP = 2;
-  RCC_OscInitStruct.PLL.PLLQ = 3;
-  RCC_OscInitStruct.PLL.PLLR = 2;
-  RCC_OscInitStruct.PLL.PLLRGE = RCC_PLL1VCIRANGE_3;
-  RCC_OscInitStruct.PLL.PLLVCOSEL = RCC_PLL1VCOMEDIUM;
-  RCC_OscInitStruct.PLL.PLLFRACN = 0;
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
     Error_Handler();
@@ -184,203 +171,85 @@ void SystemClock_Config(void)
 }
 
 /**
-  * @brief FDCAN1 Initialization Function
+  * @brief QUADSPI Initialization Function
   * @param None
   * @retval None
   */
-static void MX_FDCAN1_Init(void)
+static void MX_QUADSPI_Init(void)
 {
 
-  /* USER CODE BEGIN FDCAN1_Init 0 */
+  /* USER CODE BEGIN QUADSPI_Init 0 */
 
-  /* USER CODE END FDCAN1_Init 0 */
+  /* USER CODE END QUADSPI_Init 0 */
 
-  /* USER CODE BEGIN FDCAN1_Init 1 */
+  /* USER CODE BEGIN QUADSPI_Init 1 */
 
-  /* USER CODE END FDCAN1_Init 1 */
-  hfdcan1.Instance = FDCAN1;
-  hfdcan1.Init.FrameFormat = FDCAN_FRAME_CLASSIC;
-  hfdcan1.Init.Mode = FDCAN_MODE_NORMAL;
-  hfdcan1.Init.AutoRetransmission = DISABLE;
-  hfdcan1.Init.TransmitPause = DISABLE;
-  hfdcan1.Init.ProtocolException = DISABLE;
-  hfdcan1.Init.NominalPrescaler = 16;
-  hfdcan1.Init.NominalSyncJumpWidth = 1;
-  hfdcan1.Init.NominalTimeSeg1 = 2;
-  hfdcan1.Init.NominalTimeSeg2 = 2;
-  hfdcan1.Init.DataPrescaler = 1;
-  hfdcan1.Init.DataSyncJumpWidth = 1;
-  hfdcan1.Init.DataTimeSeg1 = 1;
-  hfdcan1.Init.DataTimeSeg2 = 1;
-  hfdcan1.Init.MessageRAMOffset = 0;
-  hfdcan1.Init.StdFiltersNbr = 0;
-  hfdcan1.Init.ExtFiltersNbr = 0;
-  hfdcan1.Init.RxFifo0ElmtsNbr = 0;
-  hfdcan1.Init.RxFifo0ElmtSize = FDCAN_DATA_BYTES_8;
-  hfdcan1.Init.RxFifo1ElmtsNbr = 0;
-  hfdcan1.Init.RxFifo1ElmtSize = FDCAN_DATA_BYTES_8;
-  hfdcan1.Init.RxBuffersNbr = 0;
-  hfdcan1.Init.RxBufferSize = FDCAN_DATA_BYTES_8;
-  hfdcan1.Init.TxEventsNbr = 0;
-  hfdcan1.Init.TxBuffersNbr = 0;
-  hfdcan1.Init.TxFifoQueueElmtsNbr = 0;
-  hfdcan1.Init.TxFifoQueueMode = FDCAN_TX_FIFO_OPERATION;
-  hfdcan1.Init.TxElmtSize = FDCAN_DATA_BYTES_8;
-  if (HAL_FDCAN_Init(&hfdcan1) != HAL_OK)
+  /* USER CODE END QUADSPI_Init 1 */
+  /* QUADSPI parameter configuration*/
+  hqspi.Instance = QUADSPI;
+  hqspi.Init.ClockPrescaler = 255;
+  hqspi.Init.FifoThreshold = 1;
+  hqspi.Init.SampleShifting = QSPI_SAMPLE_SHIFTING_NONE;
+  hqspi.Init.FlashSize = 1;
+  hqspi.Init.ChipSelectHighTime = QSPI_CS_HIGH_TIME_1_CYCLE;
+  hqspi.Init.ClockMode = QSPI_CLOCK_MODE_0;
+  hqspi.Init.FlashID = QSPI_FLASH_ID_1;
+  hqspi.Init.DualFlash = QSPI_DUALFLASH_DISABLE;
+  if (HAL_QSPI_Init(&hqspi) != HAL_OK)
   {
     Error_Handler();
   }
-  /* USER CODE BEGIN FDCAN1_Init 2 */
+  /* USER CODE BEGIN QUADSPI_Init 2 */
 
-  /* USER CODE END FDCAN1_Init 2 */
+  /* USER CODE END QUADSPI_Init 2 */
 
 }
 
 /**
-  * @brief FDCAN2 Initialization Function
+  * @brief USART1 Initialization Function
   * @param None
   * @retval None
   */
-static void MX_FDCAN2_Init(void)
+static void MX_USART1_UART_Init(void)
 {
 
-  /* USER CODE BEGIN FDCAN2_Init 0 */
+  /* USER CODE BEGIN USART1_Init 0 */
 
-  /* USER CODE END FDCAN2_Init 0 */
+  /* USER CODE END USART1_Init 0 */
 
-  /* USER CODE BEGIN FDCAN2_Init 1 */
+  /* USER CODE BEGIN USART1_Init 1 */
 
-  /* USER CODE END FDCAN2_Init 1 */
-  hfdcan2.Instance = FDCAN2;
-  hfdcan2.Init.FrameFormat = FDCAN_FRAME_CLASSIC;
-  hfdcan2.Init.Mode = FDCAN_MODE_NORMAL;
-  hfdcan2.Init.AutoRetransmission = DISABLE;
-  hfdcan2.Init.TransmitPause = DISABLE;
-  hfdcan2.Init.ProtocolException = DISABLE;
-  hfdcan2.Init.NominalPrescaler = 16;
-  hfdcan2.Init.NominalSyncJumpWidth = 1;
-  hfdcan2.Init.NominalTimeSeg1 = 2;
-  hfdcan2.Init.NominalTimeSeg2 = 2;
-  hfdcan2.Init.DataPrescaler = 1;
-  hfdcan2.Init.DataSyncJumpWidth = 1;
-  hfdcan2.Init.DataTimeSeg1 = 1;
-  hfdcan2.Init.DataTimeSeg2 = 1;
-  hfdcan2.Init.MessageRAMOffset = 0;
-  hfdcan2.Init.StdFiltersNbr = 0;
-  hfdcan2.Init.ExtFiltersNbr = 0;
-  hfdcan2.Init.RxFifo0ElmtsNbr = 0;
-  hfdcan2.Init.RxFifo0ElmtSize = FDCAN_DATA_BYTES_8;
-  hfdcan2.Init.RxFifo1ElmtsNbr = 0;
-  hfdcan2.Init.RxFifo1ElmtSize = FDCAN_DATA_BYTES_8;
-  hfdcan2.Init.RxBuffersNbr = 0;
-  hfdcan2.Init.RxBufferSize = FDCAN_DATA_BYTES_8;
-  hfdcan2.Init.TxEventsNbr = 0;
-  hfdcan2.Init.TxBuffersNbr = 0;
-  hfdcan2.Init.TxFifoQueueElmtsNbr = 0;
-  hfdcan2.Init.TxFifoQueueMode = FDCAN_TX_FIFO_OPERATION;
-  hfdcan2.Init.TxElmtSize = FDCAN_DATA_BYTES_8;
-  if (HAL_FDCAN_Init(&hfdcan2) != HAL_OK)
+  /* USER CODE END USART1_Init 1 */
+  huart1.Instance = USART1;
+  huart1.Init.BaudRate = 115200;
+  huart1.Init.WordLength = UART_WORDLENGTH_8B;
+  huart1.Init.StopBits = UART_STOPBITS_1;
+  huart1.Init.Parity = UART_PARITY_NONE;
+  huart1.Init.Mode = UART_MODE_TX_RX;
+  huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart1.Init.OverSampling = UART_OVERSAMPLING_16;
+  huart1.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
+  huart1.Init.ClockPrescaler = UART_PRESCALER_DIV1;
+  huart1.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
+  if (HAL_UART_Init(&huart1) != HAL_OK)
   {
     Error_Handler();
   }
-  /* USER CODE BEGIN FDCAN2_Init 2 */
-
-  /* USER CODE END FDCAN2_Init 2 */
-
-}
-
-/**
-  * @brief SPI1 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_SPI1_Init(void)
-{
-
-  /* USER CODE BEGIN SPI1_Init 0 */
-
-  /* USER CODE END SPI1_Init 0 */
-
-  /* USER CODE BEGIN SPI1_Init 1 */
-
-  /* USER CODE END SPI1_Init 1 */
-  /* SPI1 parameter configuration*/
-  hspi1.Instance = SPI1;
-  hspi1.Init.Mode = SPI_MODE_MASTER;
-  hspi1.Init.Direction = SPI_DIRECTION_2LINES;
-  hspi1.Init.DataSize = SPI_DATASIZE_4BIT;
-  hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
-  hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
-  hspi1.Init.NSS = SPI_NSS_SOFT;
-  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_2;
-  hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
-  hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
-  hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
-  hspi1.Init.CRCPolynomial = 0x0;
-  hspi1.Init.NSSPMode = SPI_NSS_PULSE_ENABLE;
-  hspi1.Init.NSSPolarity = SPI_NSS_POLARITY_LOW;
-  hspi1.Init.FifoThreshold = SPI_FIFO_THRESHOLD_01DATA;
-  hspi1.Init.TxCRCInitializationPattern = SPI_CRC_INITIALIZATION_ALL_ZERO_PATTERN;
-  hspi1.Init.RxCRCInitializationPattern = SPI_CRC_INITIALIZATION_ALL_ZERO_PATTERN;
-  hspi1.Init.MasterSSIdleness = SPI_MASTER_SS_IDLENESS_00CYCLE;
-  hspi1.Init.MasterInterDataIdleness = SPI_MASTER_INTERDATA_IDLENESS_00CYCLE;
-  hspi1.Init.MasterReceiverAutoSusp = SPI_MASTER_RX_AUTOSUSP_DISABLE;
-  hspi1.Init.MasterKeepIOState = SPI_MASTER_KEEP_IO_STATE_DISABLE;
-  hspi1.Init.IOSwap = SPI_IO_SWAP_DISABLE;
-  if (HAL_SPI_Init(&hspi1) != HAL_OK)
+  if (HAL_UARTEx_SetTxFifoThreshold(&huart1, UART_TXFIFO_THRESHOLD_1_8) != HAL_OK)
   {
     Error_Handler();
   }
-  /* USER CODE BEGIN SPI1_Init 2 */
-
-  /* USER CODE END SPI1_Init 2 */
-
-}
-
-/**
-  * @brief SPI2 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_SPI2_Init(void)
-{
-
-  /* USER CODE BEGIN SPI2_Init 0 */
-
-  /* USER CODE END SPI2_Init 0 */
-
-  /* USER CODE BEGIN SPI2_Init 1 */
-
-  /* USER CODE END SPI2_Init 1 */
-  /* SPI2 parameter configuration*/
-  hspi2.Instance = SPI2;
-  hspi2.Init.Mode = SPI_MODE_SLAVE;
-  hspi2.Init.Direction = SPI_DIRECTION_2LINES;
-  hspi2.Init.DataSize = SPI_DATASIZE_4BIT;
-  hspi2.Init.CLKPolarity = SPI_POLARITY_LOW;
-  hspi2.Init.CLKPhase = SPI_PHASE_1EDGE;
-  hspi2.Init.NSS = SPI_NSS_SOFT;
-  hspi2.Init.FirstBit = SPI_FIRSTBIT_MSB;
-  hspi2.Init.TIMode = SPI_TIMODE_DISABLE;
-  hspi2.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
-  hspi2.Init.CRCPolynomial = 0x0;
-  hspi2.Init.NSSPMode = SPI_NSS_PULSE_DISABLE;
-  hspi2.Init.NSSPolarity = SPI_NSS_POLARITY_LOW;
-  hspi2.Init.FifoThreshold = SPI_FIFO_THRESHOLD_01DATA;
-  hspi2.Init.TxCRCInitializationPattern = SPI_CRC_INITIALIZATION_ALL_ZERO_PATTERN;
-  hspi2.Init.RxCRCInitializationPattern = SPI_CRC_INITIALIZATION_ALL_ZERO_PATTERN;
-  hspi2.Init.MasterSSIdleness = SPI_MASTER_SS_IDLENESS_00CYCLE;
-  hspi2.Init.MasterInterDataIdleness = SPI_MASTER_INTERDATA_IDLENESS_00CYCLE;
-  hspi2.Init.MasterReceiverAutoSusp = SPI_MASTER_RX_AUTOSUSP_DISABLE;
-  hspi2.Init.MasterKeepIOState = SPI_MASTER_KEEP_IO_STATE_DISABLE;
-  hspi2.Init.IOSwap = SPI_IO_SWAP_DISABLE;
-  if (HAL_SPI_Init(&hspi2) != HAL_OK)
+  if (HAL_UARTEx_SetRxFifoThreshold(&huart1, UART_RXFIFO_THRESHOLD_1_8) != HAL_OK)
   {
     Error_Handler();
   }
-  /* USER CODE BEGIN SPI2_Init 2 */
+  if (HAL_UARTEx_DisableFifoMode(&huart1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN USART1_Init 2 */
 
-  /* USER CODE END SPI2_Init 2 */
+  /* USER CODE END USART1_Init 2 */
 
 }
 
@@ -395,16 +264,29 @@ static void MX_GPIO_Init(void)
 
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOC_CLK_ENABLE();
-  __HAL_RCC_GPIOH_CLK_ENABLE();
+  __HAL_RCC_GPIOF_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOH_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0|GPIO_PIN_1, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0|GPIO_PIN_1, GPIO_PIN_SET);
+
+  /*Configure GPIO pin : PC13 */
+  GPIO_InitStruct.Pin = GPIO_PIN_13;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : PA0 */
+  GPIO_InitStruct.Pin = GPIO_PIN_0;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /*Configure GPIO pins : PH2 PH3 */
   GPIO_InitStruct.Pin = GPIO_PIN_2|GPIO_PIN_3;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOH, &GPIO_InitStruct);
 
@@ -415,39 +297,63 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI0_IRQn, 1, 0);
+  HAL_NVIC_EnableIRQ(EXTI0_IRQn);
+
+  HAL_NVIC_SetPriority(EXTI2_IRQn, 2, 0);
+  HAL_NVIC_EnableIRQ(EXTI2_IRQn);
+
+  HAL_NVIC_SetPriority(EXTI3_IRQn, 3, 0);
+  HAL_NVIC_EnableIRQ(EXTI3_IRQn);
+
+  HAL_NVIC_SetPriority(EXTI15_10_IRQn, 13, 0);
+  HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
+
 }
 
 /* USER CODE BEGIN 4 */
-//can发送一组数据(固定格式:ID为0X12,标准帧,数据帧)
-//len:数据长度(最大为8),可设置为FDCAN_DLC_BYTES_2~FDCAN_DLC_BYTES_8
-//msg:数据指针,最大为8个字节.
-//返回值:0,成功;
-//		 其他,失败;
-uint8_t FDCAN_Send_Msg(uint8_t* msg,uint32_t len)
-{
-    FDCAN_TxHeader.Identifier=0x12;                           //32位ID
-    FDCAN_TxHeader.IdType=FDCAN_STANDARD_ID;                  //标准ID
-    FDCAN_TxHeader.TxFrameType=FDCAN_DATA_FRAME;              //数据帧
-    FDCAN_TxHeader.DataLength=len;                            //数据长度
-    FDCAN_TxHeader.ErrorStateIndicator=FDCAN_ESI_ACTIVE;
-    FDCAN_TxHeader.BitRateSwitch=FDCAN_BRS_OFF;               //关闭速率切换
-    FDCAN_TxHeader.FDFormat=FDCAN_CLASSIC_CAN;                //传统的CAN模式
-    FDCAN_TxHeader.TxEventFifoControl=FDCAN_NO_TX_EVENTS;     //无发送事件
-    FDCAN_TxHeader.MessageMarker=0;
-
-    if(HAL_FDCAN_AddMessageToTxFifoQ(&hfdcan1,&FDCAN_TxHeader,msg)!=HAL_OK) return 1;//发送
-    return 0;
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
+//    HAL_Delay(20);
+    switch (GPIO_Pin) {
+        case GPIO_PIN_0: {//key_up high v enable
+            if (KEY_UP == 1) {
+                led1sta = !led1sta;
+                led0sta = !led1sta;
+                LED0RED(led0sta);
+                LED1GREEN(led1sta);
+                printf("key_up is touched\r\n");
+            }
+            break;
+        }
+        case GPIO_PIN_2: {//key1
+            if (KEY1 == 0) {
+                led1sta = !led1sta;
+                LED1GREEN(led1sta);
+                printf("key1 is touched\r\n");
+            }
+            break;
+        }
+        case GPIO_PIN_3: {//key0
+            if (KEY0 == 0) {
+                led0sta = !led0sta;
+                LED0RED(led0sta);
+                printf("key0 is touched\r\n");
+            }
+            break;
+        }
+        case GPIO_PIN_13: {//key2
+            if (KEY2 == 0) {
+                led1sta = 1;
+                led0sta = 1;
+                LED0RED(led0sta);
+                LED1GREEN(led1sta);
+                printf("key2 is touched\r\n");
+            }
+            break;
+        }
+    }
 }
-//can口接收数据查询
-//buf:数据缓存区;
-//返回值:0,无数据被收到;
-//		 其他,接收的数据长度;
-uint8_t FDCAN1_Receive_Msg(uint8_t *buf)
-{
-    if(HAL_FDCAN_GetRxMessage(&hfdcan1,FDCAN_RX_FIFO0,&FDCAN_RxHeader,buf)!=HAL_OK)return 0;//接收数据
-    return FDCAN_RxHeader.DataLength>>16;
-}
-
 /* USER CODE END 4 */
 
 /**

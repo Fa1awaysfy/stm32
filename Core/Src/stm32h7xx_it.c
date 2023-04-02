@@ -55,10 +55,7 @@
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
-extern FDCAN_HandleTypeDef hfdcan1;
-extern FDCAN_HandleTypeDef hfdcan2;
-extern SPI_HandleTypeDef hspi1;
-extern SPI_HandleTypeDef hspi2;
+extern UART_HandleTypeDef huart1;
 /* USER CODE BEGIN EV */
 
 /* USER CODE END EV */
@@ -202,87 +199,73 @@ void SysTick_Handler(void)
 /******************************************************************************/
 
 /**
-  * @brief This function handles FDCAN1 interrupt 0.
+  * @brief This function handles EXTI line0 interrupt.
   */
-void FDCAN1_IT0_IRQHandler(void)
+void EXTI0_IRQHandler(void)
 {
-  /* USER CODE BEGIN FDCAN1_IT0_IRQn 0 */
+  /* USER CODE BEGIN EXTI0_IRQn 0 */
 
-  /* USER CODE END FDCAN1_IT0_IRQn 0 */
-  HAL_FDCAN_IRQHandler(&hfdcan1);
-  /* USER CODE BEGIN FDCAN1_IT0_IRQn 1 */
+  /* USER CODE END EXTI0_IRQn 0 */
+  HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_0);
+  /* USER CODE BEGIN EXTI0_IRQn 1 */
 
-  /* USER CODE END FDCAN1_IT0_IRQn 1 */
+  /* USER CODE END EXTI0_IRQn 1 */
 }
 
 /**
-  * @brief This function handles FDCAN2 interrupt 0.
+  * @brief This function handles EXTI line2 interrupt.
   */
-void FDCAN2_IT0_IRQHandler(void)
+void EXTI2_IRQHandler(void)
 {
-  /* USER CODE BEGIN FDCAN2_IT0_IRQn 0 */
+  /* USER CODE BEGIN EXTI2_IRQn 0 */
 
-  /* USER CODE END FDCAN2_IT0_IRQn 0 */
-  HAL_FDCAN_IRQHandler(&hfdcan2);
-  /* USER CODE BEGIN FDCAN2_IT0_IRQn 1 */
+  /* USER CODE END EXTI2_IRQn 0 */
+  HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_2);
+  /* USER CODE BEGIN EXTI2_IRQn 1 */
 
-  /* USER CODE END FDCAN2_IT0_IRQn 1 */
+  /* USER CODE END EXTI2_IRQn 1 */
 }
 
 /**
-  * @brief This function handles FDCAN1 interrupt 1.
+  * @brief This function handles EXTI line3 interrupt.
   */
-void FDCAN1_IT1_IRQHandler(void)
+void EXTI3_IRQHandler(void)
 {
-  /* USER CODE BEGIN FDCAN1_IT1_IRQn 0 */
+  /* USER CODE BEGIN EXTI3_IRQn 0 */
 
-  /* USER CODE END FDCAN1_IT1_IRQn 0 */
-  HAL_FDCAN_IRQHandler(&hfdcan1);
-  /* USER CODE BEGIN FDCAN1_IT1_IRQn 1 */
+  /* USER CODE END EXTI3_IRQn 0 */
+  HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_3);
+  /* USER CODE BEGIN EXTI3_IRQn 1 */
 
-  /* USER CODE END FDCAN1_IT1_IRQn 1 */
+  /* USER CODE END EXTI3_IRQn 1 */
 }
 
 /**
-  * @brief This function handles FDCAN2 interrupt 1.
+  * @brief This function handles USART1 global interrupt.
   */
-void FDCAN2_IT1_IRQHandler(void)
+void USART1_IRQHandler(void)
 {
-  /* USER CODE BEGIN FDCAN2_IT1_IRQn 0 */
+  /* USER CODE BEGIN USART1_IRQn 0 */
 
-  /* USER CODE END FDCAN2_IT1_IRQn 0 */
-  HAL_FDCAN_IRQHandler(&hfdcan2);
-  /* USER CODE BEGIN FDCAN2_IT1_IRQn 1 */
+  /* USER CODE END USART1_IRQn 0 */
+  HAL_UART_IRQHandler(&huart1);
+  /* USER CODE BEGIN USART1_IRQn 1 */
 
-  /* USER CODE END FDCAN2_IT1_IRQn 1 */
+  /* USER CODE END USART1_IRQn 1 */
 }
 
 /**
-  * @brief This function handles SPI1 global interrupt.
+  * @brief This function handles EXTI line[15:10] interrupts.
   */
-void SPI1_IRQHandler(void)
+void EXTI15_10_IRQHandler(void)
 {
-  /* USER CODE BEGIN SPI1_IRQn 0 */
+  /* USER CODE BEGIN EXTI15_10_IRQn 0 */
 
-  /* USER CODE END SPI1_IRQn 0 */
-  HAL_SPI_IRQHandler(&hspi1);
-  /* USER CODE BEGIN SPI1_IRQn 1 */
+  /* USER CODE END EXTI15_10_IRQn 0 */
+  HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_13);
+  /* USER CODE BEGIN EXTI15_10_IRQn 1 */
 
-  /* USER CODE END SPI1_IRQn 1 */
-}
-
-/**
-  * @brief This function handles SPI2 global interrupt.
-  */
-void SPI2_IRQHandler(void)
-{
-  /* USER CODE BEGIN SPI2_IRQn 0 */
-
-  /* USER CODE END SPI2_IRQn 0 */
-  HAL_SPI_IRQHandler(&hspi2);
-  /* USER CODE BEGIN SPI2_IRQn 1 */
-
-  /* USER CODE END SPI2_IRQn 1 */
+  /* USER CODE END EXTI15_10_IRQn 1 */
 }
 
 /* USER CODE BEGIN 1 */
