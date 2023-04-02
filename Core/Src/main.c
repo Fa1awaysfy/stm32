@@ -54,7 +54,7 @@ static void MX_GPIO_Init(void);
 static void MX_QUADSPI_Init(void);
 static void MX_USART1_UART_Init(void);
 /* USER CODE BEGIN PFP */
-
+void read_led_sta(uint8_t sta);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -71,6 +71,18 @@ static uint8_t led0sta = 0,led1sta = 0;
 #define KEY2 HAL_GPIO_ReadPin(GPIOC,GPIO_PIN_13) //KEY1  PC13
 
 
+#define RED1(n) (n ? HAL_GPIO_WritePin(GPIOI,GPIO_PIN_4,GPIO_PIN_SET): \
+                HAL_GPIO_WritePin(GPIOI,GPIO_PIN_4,GPIO_PIN_RESET)) //red1 PI4
+#define RED2(n) (n ? HAL_GPIO_WritePin(GPIOI,GPIO_PIN_5,GPIO_PIN_SET): \
+                HAL_GPIO_WritePin(GPIOI,GPIO_PIN_5,GPIO_PIN_RESET)) //red2 PI5
+#define GREEN1(n) (n ? HAL_GPIO_WritePin(GPIOI,GPIO_PIN_6,GPIO_PIN_SET): \
+                HAL_GPIO_WritePin(GPIOI,GPIO_PIN_6,GPIO_PIN_RESET)) //green1 PI6
+#define GREEN2(n) (n ? HAL_GPIO_WritePin(GPIOI,GPIO_PIN_7,GPIO_PIN_SET): \
+                HAL_GPIO_WritePin(GPIOI,GPIO_PIN_7,GPIO_PIN_RESET)) //green2 PI7
+#define YELLOW1(n) (n ? HAL_GPIO_WritePin(GPIOI,GPIO_PIN_2,GPIO_PIN_SET): \
+                HAL_GPIO_WritePin(GPIOI,GPIO_PIN_2,GPIO_PIN_RESET)) //yellow1 PI2
+#define YELLOW2(n) (n ? HAL_GPIO_WritePin(GPIOI,GPIO_PIN_3,GPIO_PIN_SET): \
+                HAL_GPIO_WritePin(GPIOI,GPIO_PIN_3,GPIO_PIN_RESET)) //yellow2 PI3
 
 /* USER CODE END 0 */
 
@@ -81,6 +93,7 @@ static uint8_t led0sta = 0,led1sta = 0;
 int main(void)
 {
   /* USER CODE BEGIN 1 */
+  static uint8_t ledsta = 0b000001;// left to right :red1\red2\green1\green2\yellow1\yellow2, 1 is lighting
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -143,24 +156,33 @@ int main(void)
 
     __NOP();	// place for breakpoint
 
-    /* USER CODE END 2 */
+  /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
     /* USER CODE END WHILE */
+
     /* USER CODE BEGIN 3 */
     printf("Start loop\r\n");
-    if(W25Q_ProgramData((u8_t*) &_str, len, ++in_page_shift, page_number)==W25Q_OK)
+//    if(W25Q_ProgramData((u8_t*) &_str, len, ++in_page_shift, page_number)==W25Q_OK)
+//    {
+//        printf("ProgramData OK, content is%s\r\n",_str.str);
+//    }
+//    if(W25Q_ReadData((u8_t*) &_str2, len, in_page_shift, page_number)==W25Q_OK)
+//    {
+//        printf("ReadData OK, content is%s\r\n",_str.str);
+//    }
+
+    for(uint8_t i=0;i<6;i++)
     {
-        printf("ProgramData OK, content is%s\r\n",_str.str);
+        HAL_Delay(100);
+        read_led_sta(ledsta);
+        ledsta=ledsta<<1;
     }
-      if(W25Q_ReadData((u8_t*) &_str2, len, in_page_shift, page_number)==W25Q_OK)
-      {
-          printf("ReadData OK, content is%s\r\n",_str.str);
-      }
-    HAL_Delay(1000);
+    ledsta = 0b000001;
+//    HAL_Delay(1000);
   }
   /* USER CODE END 3 */
 }
@@ -313,9 +335,14 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOH_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
+  __HAL_RCC_GPIOI_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0|GPIO_PIN_1, GPIO_PIN_SET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOI, GPIO_PIN_2|GPIO_PIN_3|GPIO_PIN_4|GPIO_PIN_5
+                          |GPIO_PIN_6|GPIO_PIN_7, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : PC13 */
   GPIO_InitStruct.Pin = GPIO_PIN_13;
@@ -342,6 +369,15 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
+  /*Configure GPIO pins : PI2 PI3 PI4 PI5
+                           PI6 PI7 */
+  GPIO_InitStruct.Pin = GPIO_PIN_2|GPIO_PIN_3|GPIO_PIN_4|GPIO_PIN_5
+                          |GPIO_PIN_6|GPIO_PIN_7;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+  HAL_GPIO_Init(GPIOI, &GPIO_InitStruct);
+
   /* EXTI interrupt init*/
   HAL_NVIC_SetPriority(EXTI0_IRQn, 1, 0);
   HAL_NVIC_EnableIRQ(EXTI0_IRQn);
@@ -355,6 +391,46 @@ static void MX_GPIO_Init(void)
   HAL_NVIC_SetPriority(EXTI15_10_IRQn, 13, 0);
   HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 
+}
+
+void read_led_sta(uint8_t sta)
+{
+    uint8_t temp_sta = 0b000001;//¼ì²â
+    if(sta & temp_sta)
+    {
+        YELLOW2(0);
+        RED1(1);
+    }
+    temp_sta=temp_sta<<1;
+    if(sta & temp_sta)//temp_sta = 0b000010
+    {
+        RED1(0);
+        RED2(1);
+    }
+    temp_sta=temp_sta<<1;
+    if(sta & temp_sta)//temp_sta = 0b000100
+    {
+        RED2(0);
+        GREEN1(1);
+    }
+    temp_sta=temp_sta<<1;
+    if(sta & temp_sta)//temp_sta = 0b001000
+    {
+        GREEN1(0);
+        GREEN2(1);
+    }
+    temp_sta=temp_sta<<1;
+    if(sta & temp_sta)//temp_sta = 0b010000
+    {
+        GREEN2(0);
+        YELLOW1(1);
+    }
+    temp_sta=temp_sta<<1;
+    if(sta & temp_sta)//temp_sta = 0b100000
+    {
+        YELLOW1(0);
+        YELLOW2(1);
+    }
 }
 
 /* USER CODE BEGIN 4 */
@@ -399,6 +475,8 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
         }
     }
 }
+
+void read_led_sta(uint8_t sta);
 /* USER CODE END 4 */
 
 /**
