@@ -21,7 +21,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "w25q_mem.h" //QSPI use method lib from GitHub
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -104,17 +104,62 @@ int main(void)
   MX_QUADSPI_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
+    W25Q_Init();		 // init the chip
+    W25Q_EraseSector(0); // erase 4K sector - required before recording
+    u8_t byte = 0x65;
+    u8_t byte_read = 0;
+    u8_t in_page_shift = 0;
+    u8_t page_number = 0;
+    // write data
+    W25Q_ProgramByte(byte, in_page_shift, page_number);
+    // read data
+    W25Q_ReadByte(&byte_read, in_page_shift, page_number);
 
-  /* USER CODE END 2 */
+    // make example structure
+    struct STR {
+        u8_t abc;
+        u32_t bca;
+        char str[4];
+        fl_t gg;
+    } _str, _str2;
+
+    // fill instance
+    _str.abc = 0x20;
+    _str.bca = 0x3F3F4A;
+    _str.str[0] = 'a';
+    _str.str[1] = 'b';
+    _str.str[2] = 'c';
+    _str.str[3] = '\0';
+    _str.gg = 0.658;
+
+    u16_t len = sizeof(_str);	// length of structure in bytes
+
+    // program structure
+    W25Q_ProgramData((u8_t*) &_str, len, ++in_page_shift, page_number);
+    // read structure to another instance
+    W25Q_ReadData((u8_t*) &_str2, len, in_page_shift, page_number);
+
+    W25Q_Sleep();	// go to sleep
+
+    __NOP();	// place for breakpoint
+
+    /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
     /* USER CODE END WHILE */
-
     /* USER CODE BEGIN 3 */
-    printf("OK\r\n");
+    printf("Start loop\r\n");
+    if(W25Q_ProgramData((u8_t*) &_str, len, ++in_page_shift, page_number)==W25Q_OK)
+    {
+        printf("ProgramData OK, content is%s\r\n",_str.str);
+    }
+      if(W25Q_ReadData((u8_t*) &_str2, len, in_page_shift, page_number)==W25Q_OK)
+      {
+          printf("ReadData OK, content is%s\r\n",_str.str);
+      }
     HAL_Delay(1000);
   }
   /* USER CODE END 3 */
@@ -187,10 +232,10 @@ static void MX_QUADSPI_Init(void)
   /* USER CODE END QUADSPI_Init 1 */
   /* QUADSPI parameter configuration*/
   hqspi.Instance = QUADSPI;
-  hqspi.Init.ClockPrescaler = 255;
+  hqspi.Init.ClockPrescaler = 1;
   hqspi.Init.FifoThreshold = 1;
   hqspi.Init.SampleShifting = QSPI_SAMPLE_SHIFTING_NONE;
-  hqspi.Init.FlashSize = 1;
+  hqspi.Init.FlashSize = 24;
   hqspi.Init.ChipSelectHighTime = QSPI_CS_HIGH_TIME_1_CYCLE;
   hqspi.Init.ClockMode = QSPI_CLOCK_MODE_0;
   hqspi.Init.FlashID = QSPI_FLASH_ID_1;
