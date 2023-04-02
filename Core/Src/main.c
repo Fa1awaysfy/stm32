@@ -155,7 +155,11 @@ int main(void)
     W25Q_Sleep();	// go to sleep
 
     __NOP();	// place for breakpoint
-
+    uint8_t buf = 0XEF18 ;
+    while(W25Q_ReadID(&buf)!=W25Q_OK)
+    {
+        printf("can't find device, content is%d\r\n",_str.abc);
+    }
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -163,26 +167,26 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-
     /* USER CODE BEGIN 3 */
     printf("Start loop\r\n");
-//    if(W25Q_ProgramData((u8_t*) &_str, len, ++in_page_shift, page_number)==W25Q_OK)
-//    {
-//        printf("ProgramData OK, content is%s\r\n",_str.str);
-//    }
-//    if(W25Q_ReadData((u8_t*) &_str2, len, in_page_shift, page_number)==W25Q_OK)
-//    {
-//        printf("ReadData OK, content is%s\r\n",_str.str);
-//    }
 
-    for(uint8_t i=0;i<6;i++)
+      if(HAL_QSPI_Receive(&hqspi, &_str.abc, 500) == HAL_OK)
     {
-        HAL_Delay(100);
-        read_led_sta(ledsta);
-        ledsta=ledsta<<1;
+        printf("HAL_QSPI_Receive OK, content is%d\r\n",_str.abc);
     }
-    ledsta = 0b000001;
-//    HAL_Delay(1000);
+    if(HAL_QSPI_Transmit(&hqspi,&_str.abc,500)==HAL_OK)
+    {
+        printf("HAL_QSPI_Transmit OK, content is%d\r\n",_str.abc);
+    }
+
+//    for(uint8_t i=0;i<6;i++)
+//    {
+//        HAL_Delay(100);
+//        read_led_sta(ledsta);
+//        ledsta=ledsta<<1;
+//    }
+//    ledsta = 0b000001;
+    HAL_Delay(1000);
   }
   /* USER CODE END 3 */
 }
@@ -330,6 +334,7 @@ static void MX_GPIO_Init(void)
   GPIO_InitTypeDef GPIO_InitStruct = {0};
 
   /* GPIO Ports Clock Enable */
+  __HAL_RCC_QSPI_CLK_ENABLE();
   __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOF_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
@@ -393,49 +398,10 @@ static void MX_GPIO_Init(void)
 
 }
 
-void read_led_sta(uint8_t sta)
-{
-    uint8_t temp_sta = 0b000001;//¼ì²â
-    if(sta & temp_sta)
-    {
-        YELLOW2(0);
-        RED1(1);
-    }
-    temp_sta=temp_sta<<1;
-    if(sta & temp_sta)//temp_sta = 0b000010
-    {
-        RED1(0);
-        RED2(1);
-    }
-    temp_sta=temp_sta<<1;
-    if(sta & temp_sta)//temp_sta = 0b000100
-    {
-        RED2(0);
-        GREEN1(1);
-    }
-    temp_sta=temp_sta<<1;
-    if(sta & temp_sta)//temp_sta = 0b001000
-    {
-        GREEN1(0);
-        GREEN2(1);
-    }
-    temp_sta=temp_sta<<1;
-    if(sta & temp_sta)//temp_sta = 0b010000
-    {
-        GREEN2(0);
-        YELLOW1(1);
-    }
-    temp_sta=temp_sta<<1;
-    if(sta & temp_sta)//temp_sta = 0b100000
-    {
-        YELLOW1(0);
-        YELLOW2(1);
-    }
-}
 
 /* USER CODE BEGIN 4 */
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
-//    HAL_Delay(20);
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
     switch (GPIO_Pin) {
         case GPIO_PIN_0: {//key_up high v enable
             if (KEY_UP == 1) {
@@ -476,7 +442,45 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
     }
 }
 
-void read_led_sta(uint8_t sta);
+void read_led_sta(uint8_t sta)
+{
+    uint8_t temp_sta = 0b000001;//¼ì²â
+    if(sta & temp_sta)
+    {
+        YELLOW2(0);
+        RED1(1);
+    }
+    temp_sta=temp_sta<<1;
+    if(sta & temp_sta)//temp_sta = 0b000010
+    {
+        RED1(0);
+        RED2(1);
+    }
+    temp_sta=temp_sta<<1;
+    if(sta & temp_sta)//temp_sta = 0b000100
+    {
+        RED2(0);
+        GREEN1(1);
+    }
+    temp_sta=temp_sta<<1;
+    if(sta & temp_sta)//temp_sta = 0b001000
+    {
+        GREEN1(0);
+        GREEN2(1);
+    }
+    temp_sta=temp_sta<<1;
+    if(sta & temp_sta)//temp_sta = 0b010000
+    {
+        GREEN2(0);
+        YELLOW1(1);
+    }
+    temp_sta=temp_sta<<1;
+    if(sta & temp_sta)//temp_sta = 0b100000
+    {
+        YELLOW1(0);
+        YELLOW2(1);
+    }
+}
 /* USER CODE END 4 */
 
 /**
