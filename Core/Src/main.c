@@ -73,24 +73,15 @@ static uint8_t led0sta = 0,led1sta = 0;
                 HAL_GPIO_WritePin(GPIOB,GPIO_PIN_0,GPIO_PIN_RESET)) //led0
 #define LED1GREEN(n) (n ? HAL_GPIO_WritePin(GPIOB,GPIO_PIN_1,GPIO_PIN_SET): \
                 HAL_GPIO_WritePin(GPIOB,GPIO_PIN_1,GPIO_PIN_RESET)) //led1
+
 #define KEY_UP HAL_GPIO_ReadPin(GPIOA,GPIO_PIN_0) //KEY_UP  PA0
 #define KEY0 HAL_GPIO_ReadPin(GPIOH,GPIO_PIN_3) //KEY0  PH3
 #define KEY1 HAL_GPIO_ReadPin(GPIOH,GPIO_PIN_2) //KEY1  PH2
 #define KEY2 HAL_GPIO_ReadPin(GPIOC,GPIO_PIN_13) //KEY1  PC13
 
+#define HALL1 HAL_GPIO_ReadPin(GPIOI,GPIO_PIN_4) //Hall sensor left
+#define HALL2 HAL_GPIO_ReadPin(GPIOI,GPIO_PIN_5) //Hall sensor right
 
-#define RED1(n) (n ? HAL_GPIO_WritePin(GPIOI,GPIO_PIN_4,GPIO_PIN_SET): \
-                HAL_GPIO_WritePin(GPIOI,GPIO_PIN_4,GPIO_PIN_RESET)) //red1 PI4
-#define RED2(n) (n ? HAL_GPIO_WritePin(GPIOI,GPIO_PIN_5,GPIO_PIN_SET): \
-                HAL_GPIO_WritePin(GPIOI,GPIO_PIN_5,GPIO_PIN_RESET)) //red2 PI5
-#define GREEN1(n) (n ? HAL_GPIO_WritePin(GPIOI,GPIO_PIN_6,GPIO_PIN_SET): \
-                HAL_GPIO_WritePin(GPIOI,GPIO_PIN_6,GPIO_PIN_RESET)) //green1 PI6
-#define GREEN2(n) (n ? HAL_GPIO_WritePin(GPIOI,GPIO_PIN_7,GPIO_PIN_SET): \
-                HAL_GPIO_WritePin(GPIOI,GPIO_PIN_7,GPIO_PIN_RESET)) //green2 PI7
-#define YELLOW1(n) (n ? HAL_GPIO_WritePin(GPIOI,GPIO_PIN_2,GPIO_PIN_SET): \
-                HAL_GPIO_WritePin(GPIOI,GPIO_PIN_2,GPIO_PIN_RESET)) //yellow1 PI2
-#define YELLOW2(n) (n ? HAL_GPIO_WritePin(GPIOI,GPIO_PIN_3,GPIO_PIN_SET): \
-                HAL_GPIO_WritePin(GPIOI,GPIO_PIN_3,GPIO_PIN_RESET)) //yellow2 PI3
 
 /* USER CODE END 0 */
 
@@ -126,6 +117,7 @@ int main(void)
   MX_USART1_UART_Init();
   MX_FDCAN1_Init();
   /* USER CODE BEGIN 2 */
+  //QSPI code, flash setting
     W25Q_Init();		 // init the chip
     W25Q_EraseSector(0); // erase 4K sector - required before recording
     u8_t byte = 0x65;
@@ -401,10 +393,6 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0|GPIO_PIN_1, GPIO_PIN_SET);
 
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOI, GPIO_PIN_2|GPIO_PIN_3|GPIO_PIN_4|GPIO_PIN_5
-                          |GPIO_PIN_6|GPIO_PIN_7, GPIO_PIN_RESET);
-
   /*Configure GPIO pin : PC13 */
   GPIO_InitStruct.Pin = GPIO_PIN_13;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
@@ -430,13 +418,10 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PI2 PI3 PI4 PI5
-                           PI6 PI7 */
-  GPIO_InitStruct.Pin = GPIO_PIN_2|GPIO_PIN_3|GPIO_PIN_4|GPIO_PIN_5
-                          |GPIO_PIN_6|GPIO_PIN_7;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_PULLUP;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+  /*Configure GPIO pins : PI4 PI5 */
+  GPIO_InitStruct.Pin = GPIO_PIN_4|GPIO_PIN_5;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
   HAL_GPIO_Init(GPIOI, &GPIO_InitStruct);
 
   /* EXTI interrupt init*/
@@ -449,7 +434,13 @@ static void MX_GPIO_Init(void)
   HAL_NVIC_SetPriority(EXTI3_IRQn, 11, 0);
   HAL_NVIC_EnableIRQ(EXTI3_IRQn);
 
-  HAL_NVIC_SetPriority(EXTI15_10_IRQn, 13, 0);
+  HAL_NVIC_SetPriority(EXTI4_IRQn, 3, 0);
+  HAL_NVIC_EnableIRQ(EXTI4_IRQn);
+
+  HAL_NVIC_SetPriority(EXTI9_5_IRQn, 4, 0);
+  HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
+
+  HAL_NVIC_SetPriority(EXTI15_10_IRQn, 14, 0);
   HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 
 }
@@ -458,7 +449,7 @@ static void MX_GPIO_Init(void)
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
     switch (GPIO_Pin) {
-        case GPIO_PIN_0: {//key_up high v enable
+        case GPIO_PIN_0: {//key_up high voltage enable
             if (KEY_UP == 1) {
                 led1sta = !led1sta;
                 led0sta = !led1sta;
@@ -496,6 +487,30 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
             }
             break;
         }
+        case GPIO_PIN_4: {//left hall sensor
+            if (HALL1 == 1) {
+                led0sta = 0;
+                led1sta = 1;
+                LED0RED(led0sta);
+                LED1GREEN(led1sta);
+                printf("Hall sensor left changes voltage\r\n");
+            }
+            else
+                printf("Hall sensor left voltage no change\r\n");
+            break;
+        }
+        case GPIO_PIN_5: {//right hall sensor
+            if (HALL2 == 1) {
+                led0sta = 1;
+                led1sta = 0;
+                LED0RED(led0sta);
+                LED1GREEN(led1sta);
+                printf("Hall sensor right changes voltage\r\n");
+            }
+            else
+                printf("Hall sensor right voltage no change\r\n");
+            break;
+        }
         case GPIO_PIN_13: {//key2
             if (KEY2 == 0) {
                 led1sta = 1;
@@ -506,46 +521,6 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
             }
             break;
         }
-    }
-}
-
-void read_led_sta(uint8_t sta)
-{
-    uint8_t temp_sta = 0b000001;//¼ì²â
-    if(sta & temp_sta)
-    {
-        YELLOW2(0);
-        RED1(1);
-    }
-    temp_sta=temp_sta<<1;
-    if(sta & temp_sta)//temp_sta = 0b000010
-    {
-        RED1(0);
-        RED2(1);
-    }
-    temp_sta=temp_sta<<1;
-    if(sta & temp_sta)//temp_sta = 0b000100
-    {
-        RED2(0);
-        GREEN1(1);
-    }
-    temp_sta=temp_sta<<1;
-    if(sta & temp_sta)//temp_sta = 0b001000
-    {
-        GREEN1(0);
-        GREEN2(1);
-    }
-    temp_sta=temp_sta<<1;
-    if(sta & temp_sta)//temp_sta = 0b010000
-    {
-        GREEN2(0);
-        YELLOW1(1);
-    }
-    temp_sta=temp_sta<<1;
-    if(sta & temp_sta)//temp_sta = 0b100000
-    {
-        YELLOW1(0);
-        YELLOW2(1);
     }
 }
 /* USER CODE END 4 */
