@@ -53,6 +53,12 @@ FDCAN_RxHeaderTypeDef FDCAN1_RxHeader;
 FDCAN_TxHeaderTypeDef FDCAN1_TxHeader;
 
 static uint8_t msg[]={1,2,3,4,5,6,7};
+
+static uint8_t num[] = {1,2,4,5,10};
+static uint32_t process_result=0b1000011011;//Imatate signs from tx2, the first seed is target seed.(32 seeds inf)Only send the target seed inf.
+
+static uint8_t seed_num_hall1 = 0;
+static uint8_t seed_num_hall2 = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -62,7 +68,8 @@ static void MX_QUADSPI_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_FDCAN1_Init(void);
 /* USER CODE BEGIN PFP */
-void read_led_sta(uint8_t sta);
+void dif_fluoresent_seed(uint8_t num_hall2, uint32_t tx2_flag);
+int num_in_list(const uint8_t* num_list, uint8_t number);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -156,8 +163,8 @@ int main(void)
     W25Q_Sleep();	// go to sleep
 
     __NOP();	// place for breakpoint
-    uint8_t buf = 0XEF18 ;
-    while(W25Q_ReadID(&buf)!=W25Q_OK)
+    int buf = 0XEF18 ;
+    while(W25Q_ReadID((u8_t *) &buf) != W25Q_OK)
     {
         printf("can't find device, content is%d\r\n",_str.abc);
     }
@@ -171,8 +178,11 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
     printf("Start loop\r\n");
-
-
+    if(seed_num_hall1<seed_num_hall2)
+    {
+        printf("Something wrong happened!\r\n");
+        break;
+    }
     HAL_Delay(1000);
   }
   /* USER CODE END 3 */
@@ -493,7 +503,8 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
                 led1sta = 1;
                 LED0RED(led0sta);
                 LED1GREEN(led1sta);
-                printf("Hall sensor left changes voltage\r\n");
+                printf("Hall sensor left changes voltage, current seed %d pass\r\n",seed_num_hall1+1);
+                ++seed_num_hall1;//Seed passes the first hall sensor, count seed, send it to tx2
             }
             else
                 printf("Hall sensor left voltage no change\r\n");
@@ -505,7 +516,9 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
                 led1sta = 0;
                 LED0RED(led0sta);
                 LED1GREEN(led1sta);
-                printf("Hall sensor right changes voltage\r\n");
+                printf("Hall sensor right changes voltage, current seed %d pass\r\n",seed_num_hall2+1);
+                ++seed_num_hall2;//Seed passes the second hall sensor, count seed, compare it to tx2
+                dif_fluoresent_seed(seed_num_hall2,process_result);
             }
             else
                 printf("Hall sensor right voltage no change\r\n");
@@ -522,6 +535,28 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
             break;
         }
     }
+}
+
+void dif_fluoresent_seed(uint8_t num_hall2, uint32_t tx2_flag)
+{
+    uint8_t temp = 0b1;
+    temp = temp<<(num_hall2-1);
+    if(num_in_list(num,num_hall2) && temp&tx2_flag)
+    {
+        printf("Match successfully!\r\n");//use Spray valve here
+    }
+    else printf("Fail to match seed!\r\n");
+}
+
+int num_in_list(const uint8_t* num_list, uint8_t number)
+{
+    uint8_t len= sizeof(num_list)/sizeof(number)+1;
+    for(int i=0;i<len;i++)
+    {
+        if(num_list[i]==number)
+            return 1;//number in num_list
+    }
+    return 0;//number not in num_list
 }
 /* USER CODE END 4 */
 
