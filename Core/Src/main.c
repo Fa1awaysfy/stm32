@@ -550,7 +550,7 @@ void dif_fluoresent_seed(uint8_t num_hall2, uint32_t tx2_flag)
 
 int num_in_list(const uint8_t* num_list, uint8_t number)
 {
-    uint8_t len= sizeof(num_list)/sizeof(number)+1;
+    uint8_t len= ARRAY_SIZE(num_list);
     for(int i=0;i<len;i++)
     {
         if(num_list[i]==number)

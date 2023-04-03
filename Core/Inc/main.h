@@ -62,7 +62,7 @@ void Error_Handler(void);
 /* Private defines -----------------------------------------------------------*/
 
 /* USER CODE BEGIN Private defines */
-
+#define ARRAY_SIZE(arr) (sizeof(arr) / sizeof(*arr))
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus
