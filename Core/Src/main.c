@@ -47,9 +47,10 @@ UART_HandleTypeDef huart1;
 /* USER CODE BEGIN PV */
 __IO float semiusDelayBase;
 static uint8_t pul_sta=1,dir_sta=1,ena_sta=1;
-static uint8_t led0sta = 0,led1sta = 0;
-static uint32_t set_speed = 70;//70r/min motor output without reducer
-static uint32_t current_speed = 0;
+//static uint8_t led0sta = 0,led1sta = 0;
+static uint32_t set_speed = 700;//700r/min motor output without reducer
+//static uint32_t current_speed = 0;
+static uint32_t delay_time = 1000000;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -65,7 +66,7 @@ void PY_Delay_semius(uint32_t Delay);
 
 void motor_init();
 
-uint32_t speed2delay_sus(uint8_t speed);//speed r/min
+uint32_t speed2delay_sus(uint32_t speed);//speed r/min
 
 uint8_t sign(uint8_t num);
 /* USER CODE END PFP */
@@ -91,7 +92,7 @@ uint8_t sign(uint8_t num);
 #define ENA_minus(n) (n ? HAL_GPIO_WritePin(GPIOI,GPIO_PIN_7,GPIO_PIN_SET): \
                 HAL_GPIO_WritePin(GPIOI,GPIO_PIN_7,GPIO_PIN_RESET)) // Enable signal
 
-#define select(n) ((n) > 1000 ? 1000 : (n))
+//#define select(n) ((n) > 1000 ? 1000 : (n))
 /* USER CODE END 0 */
 
 /**
@@ -139,17 +140,17 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
     HAL_IWDG_Refresh(&hiwdg1);
-    if(current_speed!=set_speed)
-    {
-        current_speed=current_speed + sign(set_speed);
-    }
-    if(current_speed==0)
-    {
-        printf("motor stoped!");
-        ENA_minus(0);
-    }
+//    if(current_speed!=set_speed)
+//    {
+//        current_speed=current_speed + sign(set_speed);
+//    }
+//    if(current_speed==0)
+//    {
+//        printf("motor stoped!");
+//        ENA_minus(0);
+//    }
     pul_sta = !pul_sta;
-    PY_Delay_semius(speed2delay_sus(current_speed));
+    PY_Delay_semius(speed2delay_sus(set_speed));
 //      PY_Delay_semius(1000); //75r/min static velocity
     PUL_minus(pul_sta);
 
@@ -369,25 +370,25 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
         }
         case GPIO_PIN_2: {//key1
             if (KEY1 == 0) {// plus velocity
-               set_speed += 7;
+               set_speed += 70;
                 printf("speed up to %lu!\r\n",set_speed);
             }
             break;
         }
         case GPIO_PIN_3: {//key0
             if (KEY0 == 0) {// minus velocity
-                if(set_speed > 7)
-                    set_speed -= 7;
+                if(set_speed > 70)
+                    set_speed -= 70;
                 else
                     set_speed = 0;
-                printf("speed downto %lu!\r\n",set_speed);
+                printf("speed down to %lu!\r\n",set_speed);
             }
             break;
         }
         case GPIO_PIN_13: {//key2
             if (KEY2 == 0) {// start/pause the motor,disable
                 printf("key2 is touched, motor status changes\r\n");
-                current_speed = 0;
+//                current_speed = 0;
                 ena_sta = !ena_sta;
                 ENA_minus(ena_sta);
                 LED0RED(ena_sta);
@@ -399,15 +400,15 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
     }
 }
 
-uint32_t speed2delay_sus(uint8_t speed)//speed 1r/min == 1/60000r/ms, 1ms = 2 * 1000 sus
+uint32_t speed2delay_sus(uint32_t speed)//speed 1r/min == 1/60000r/ms, 1ms = 2 * 1000 sus
 {
     if(speed==0)
     {
-        return 100000;
+        return 1000000;
     }
     uint16_t step = 1600; //check figure, current status is sw5 off, sw6 off, sw7 on, sw8 on.
-    uint32_t delay_time = 2000.0 * 60000.0/(step*speed);
-    return select(delay_time) ;
+    delay_time = 2000.0 * 60000.0/(step*speed);
+    return delay_time;
 }
 
 void motor_init()
@@ -420,14 +421,14 @@ void motor_init()
 uint8_t sign(uint8_t num)
 {
     if(num > 0) {
-        return 1;
+        return 7;
     }
     else if(num == 0)
     {
         return 0;
     }
     else
-        return -1;
+        return -7;
 }
 
 void PY_semiusDelayTest(void)
