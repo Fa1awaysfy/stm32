@@ -21,7 +21,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "stm32h7xx_it.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -51,6 +51,15 @@ static uint8_t pul_sta=1,dir_sta=1,ena_sta=1;
 static uint32_t set_speed = 700;//700r/min motor output without reducer
 //static uint32_t current_speed = 0;
 static uint32_t delay_time = 1000000;
+
+static uint8_t Gate1_seed_num = 1, Gate2_seed_num = 1;
+static uint8_t receive_seed_num[] = {-1,-1,-1, -1,-1,-1,-1,-1, -1,-1,
+                                     -1,-1,-1, -1,-1,-1,-1,-1, -1,
+                                     -1,-1,-1,-1, -1,-1,-1,-1,-1,
+                                     -1,-1,-1,-1};
+static uint8_t aRxBuffer[RXBUFFERSIZE];
+static uint8_t receive_usart1[USART_REC_LEN];
+static uint8_t receive_usart1_flag = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -69,6 +78,9 @@ void motor_init();
 uint32_t speed2delay_sus(uint32_t speed);//speed r/min
 
 uint8_t sign(uint8_t num);
+void dif_fluoresent_seed(uint8_t num_Light_Gate2);
+int num_in_list(uint8_t* num_list, uint8_t number);
+void reset_receive_seed_num(uint8_t* num_list);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -84,6 +96,9 @@ uint8_t sign(uint8_t num);
 #define KEY0 HAL_GPIO_ReadPin(GPIOH,GPIO_PIN_3) //KEY0  PH3
 #define KEY1 HAL_GPIO_ReadPin(GPIOH,GPIO_PIN_2) //KEY1  PH2
 #define KEY2 HAL_GPIO_ReadPin(GPIOC,GPIO_PIN_13) //KEY1  PC13
+
+#define Light_Gate1 HAL_GPIO_ReadPin(GPIOF,GPIO_PIN_6) //Light_Gate1  PF6
+#define Light_Gate2 HAL_GPIO_ReadPin(GPIOF,GPIO_PIN_7) //Light_Gate2  PF7
 
 #define PUL_minus(n) (n ? HAL_GPIO_WritePin(GPIOI,GPIO_PIN_5,GPIO_PIN_SET): \
                 HAL_GPIO_WritePin(GPIOI,GPIO_PIN_5,GPIO_PIN_RESET)) // Pulse signal
@@ -102,7 +117,8 @@ uint8_t sign(uint8_t num);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-
+    uint8_t len;
+    uint16_t times = 0;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -126,10 +142,10 @@ int main(void)
   MX_USART1_UART_Init();
   MX_IWDG1_Init();
   /* USER CODE BEGIN 2 */
-    motor_init();
-    PY_semiusDelayTest();
-    PY_semiusDelayOptimize();
-    printf("pul_sta = %d, dir_sta = %d, ena_sta = %d\r\n",pul_sta,dir_sta,ena_sta);
+  motor_init();
+  PY_semiusDelayTest();
+  PY_semiusDelayOptimize();
+  printf("Motor control, pul_sta = %d, dir_sta = %d, ena_sta = %d\r\n",pul_sta,dir_sta,ena_sta);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -140,20 +156,25 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
     HAL_IWDG_Refresh(&hiwdg1);
-//    if(current_speed!=set_speed)
-//    {
-//        current_speed=current_speed + sign(set_speed);
-//    }
-//    if(current_speed==0)
-//    {
-//        printf("motor stoped!");
-//        ENA_minus(0);
-//    }
-    pul_sta = !pul_sta;
-    PY_Delay_semius(speed2delay_sus(set_speed));
-//      PY_Delay_semius(1000); //75r/min static velocity
-    PUL_minus(pul_sta);
-
+      if(receive_usart1_flag&0x8000) {
+          len = receive_usart1_flag & 0x3fff;//得到此次接收到的数据长度
+          HAL_UART_Transmit(&huart1,(uint8_t*)receive_usart1,
+                            len,1000);
+          while(__HAL_UART_GET_FLAG(&huart1, UART_FLAG_TC)!=SET);//等待发送结束
+          printf("\r\n\r\n");//插入换行
+          receive_usart1_flag=0;
+      }
+      else
+      {
+          times++;
+          if(times%5000==0)
+          {
+              printf("\r\nALIENTEK STM32H7 开发板 串口实验\r\n");
+              printf("正点原子@ALIENTEK\r\n\r\n\r\n");
+          }
+          if(times%200==0)printf("请输入数据,以回车键结束\r\n");
+          HAL_Delay(10);
+      }
   }
   /* USER CODE END 3 */
 }
@@ -281,7 +302,7 @@ static void MX_USART1_UART_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN USART1_Init 2 */
-
+    HAL_UART_Receive_IT(&huart1, (uint8_t *)aRxBuffer, RXBUFFERSIZE);
   /* USER CODE END USART1_Init 2 */
 
 }
@@ -297,6 +318,7 @@ static void MX_GPIO_Init(void)
 
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOC_CLK_ENABLE();
+  __HAL_RCC_GPIOF_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOH_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
@@ -313,6 +335,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : PF6 PF7 */
+  GPIO_InitStruct.Pin = GPIO_PIN_6|GPIO_PIN_7;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  HAL_GPIO_Init(GPIOF, &GPIO_InitStruct);
 
   /*Configure GPIO pin : PA0 */
   GPIO_InitStruct.Pin = GPIO_PIN_0;
@@ -350,6 +378,9 @@ static void MX_GPIO_Init(void)
   HAL_NVIC_SetPriority(EXTI3_IRQn, 11, 0);
   HAL_NVIC_EnableIRQ(EXTI3_IRQn);
 
+  HAL_NVIC_SetPriority(EXTI9_5_IRQn, 5, 0);
+  HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
+
   HAL_NVIC_SetPriority(EXTI15_10_IRQn, 14, 0);
   HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 
@@ -385,6 +416,29 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
             }
             break;
         }
+        case GPIO_PIN_6: {//key0
+            if (Light_Gate1 == 0) {// minus velocity
+                printf("No %d passed! \r\n",Gate1_seed_num);
+                ++Gate1_seed_num;
+                if(Gate1_seed_num > 32)
+                {
+                    Gate1_seed_num = 1;
+                    reset_receive_seed_num(receive_seed_num);
+                }
+            }
+            break;
+        }case GPIO_PIN_7: {//key1
+            if (Light_Gate2 == 0) {// plus velocity
+                printf("No %d passed\r\n",Gate2_seed_num);
+                if(Gate2_seed_num > Gate1_seed_num){
+                    printf("Error, Gate2_seed_num > Gate1_seed_num\r\n");
+                    break;
+                }
+                dif_fluoresent_seed(Gate2_seed_num);
+                ++Gate2_seed_num;
+            }
+            break;
+        }
         case GPIO_PIN_13: {//key2
             if (KEY2 == 0) {// start/pause the motor,disable
                 printf("key2 is touched, motor status changes\r\n");
@@ -397,9 +451,38 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
             }
             break;
         }
+        default:
+            break;
     }
 }
 
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
+    if (huart->Instance == USART1) {
+        if((receive_usart1_flag&0x8000)==0)
+        {
+            if(receive_usart1_flag&0x4000)
+            {
+                receive_usart1_flag = 0;
+            }
+            else
+                receive_usart1_flag|=0x8000;
+        }
+        else{
+            if(aRxBuffer[0] == 0x0d)
+            {
+                receive_usart1_flag|=0x4000;
+            }
+            else {
+                receive_usart1[receive_usart1_flag&0x3fff] = aRxBuffer[0];
+                ++receive_usart1_flag;
+                if(receive_usart1_flag>=USART_REC_LEN)
+                {
+                    receive_usart1_flag = 0;
+                }
+            }
+        }
+    }
+}
 uint32_t speed2delay_sus(uint32_t speed)//speed 1r/min == 1/60000r/ms, 1ms = 2 * 1000 sus
 {
     if(speed==0)
@@ -480,7 +563,33 @@ void PY_Delay_semius(uint32_t Delay)
     delayReg = 0;
     while(delayReg!=semiusNum) delayReg++;
 }
+void dif_fluoresent_seed(uint8_t num_Light_Gate2)
+{
+    if(num_in_list(receive_seed_num,num_Light_Gate2))
+    {
+        printf("Match successfully!\r\n");//use Spray valve here
+    }
+    else printf("Fail to match seed!\r\n");
+}
 
+int num_in_list(uint8_t* num_list, uint8_t number)
+{
+    if (num_list == NULL)
+        return 0;
+    if(num_list[number]==number)
+        return 1;//number in num_list
+    else
+        return 0;
+
+}
+
+void reset_receive_seed_num(uint8_t* num_list)
+{
+    for(int i=0;i<ARRAY_SIZE(num_list);i++)
+    {
+        num_list[i] = 0;
+    }
+}
 /* USER CODE END 4 */
 
 /**

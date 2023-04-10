@@ -32,10 +32,6 @@ extern "C" {
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "retarget.h"
-//#include "stdio.h"
-//#include "../../sys/Inc/delay.h"
-//#include "../../sys/Inc/usart.h"
-//#include "../../sys/Inc/sys.h"
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
@@ -45,6 +41,7 @@ extern "C" {
 
 /* Exported constants --------------------------------------------------------*/
 /* USER CODE BEGIN EC */
+
 /* USER CODE END EC */
 
 /* Exported macro ------------------------------------------------------------*/
@@ -63,6 +60,8 @@ void Error_Handler(void);
 
 /* USER CODE BEGIN Private defines */
 #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof(*arr))
+#define RXBUFFERSIZE  1 //接收缓冲区大小
+#define USART_REC_LEN 200//定义最大接收字节数 200
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus
