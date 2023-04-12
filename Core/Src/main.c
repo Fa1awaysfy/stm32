@@ -53,13 +53,10 @@ static uint32_t set_speed = 700;//700r/min motor output without reducer
 static uint32_t delay_time = 1000000;
 
 static uint8_t Gate1_seed_num = 1, Gate2_seed_num = 1;
-static uint8_t receive_seed_num[] = {-1,-1,-1, -1,-1,-1,-1,-1, -1,-1,
-                                     -1,-1,-1, -1,-1,-1,-1,-1, -1,
-                                     -1,-1,-1,-1, -1,-1,-1,-1,-1,
-                                     -1,-1,-1,-1};
+static uint8_t receive_seed_num = 0b0;
 static uint8_t aRxBuffer[RXBUFFERSIZE];
+static uint8_t aTxBuffer[TXBUFFERSIZE];
 static uint8_t receive_usart1[USART_REC_LEN];
-static uint8_t receive_usart1_flag = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -79,8 +76,6 @@ uint32_t speed2delay_sus(uint32_t speed);//speed r/min
 
 uint8_t sign(uint8_t num);
 void dif_fluoresent_seed(uint8_t num_Light_Gate2);
-int num_in_list(uint8_t* num_list, uint8_t number);
-void reset_receive_seed_num(uint8_t* num_list);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -146,6 +141,7 @@ int main(void)
   PY_semiusDelayTest();
   PY_semiusDelayOptimize();
   printf("Motor control, pul_sta = %d, dir_sta = %d, ena_sta = %d\r\n",pul_sta,dir_sta,ena_sta);
+  HAL_UART_Receive_IT(&huart1, (uint8_t *)aRxBuffer, RXBUFFERSIZE);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -156,25 +152,13 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
     HAL_IWDG_Refresh(&hiwdg1);
-      if(receive_usart1_flag&0x8000) {
-          len = receive_usart1_flag & 0x3fff;//得到此次接收到的数据长度
-          HAL_UART_Transmit(&huart1,(uint8_t*)receive_usart1,
-                            len,1000);
-          while(__HAL_UART_GET_FLAG(&huart1, UART_FLAG_TC)!=SET);//等待发送结束
-          printf("\r\n\r\n");//插入换行
-          receive_usart1_flag=0;
-      }
-      else
-      {
-          times++;
-          if(times%5000==0)
-          {
-              printf("\r\nALIENTEK STM32H7 开发板 串口实验\r\n");
-              printf("正点原子@ALIENTEK\r\n\r\n\r\n");
-          }
-          if(times%200==0)printf("请输入数据,以回车键结束\r\n");
-          HAL_Delay(10);
-      }
+//    for(uint8_t i = 0;i<20;i++)
+//        printf("aRxBuffer[%d] = %c\r\n", i, aRxBuffer[i]);
+    if(receive_seed_num != 0b0)
+    {
+        printf("receive_seed_num = %d\r",receive_seed_num);
+    }
+    HAL_Delay(1000);
   }
   /* USER CODE END 3 */
 }
@@ -423,7 +407,6 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
                 if(Gate1_seed_num > 32)
                 {
                     Gate1_seed_num = 1;
-                    reset_receive_seed_num(receive_seed_num);
                 }
             }
             break;
@@ -436,6 +419,11 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
                 }
                 dif_fluoresent_seed(Gate2_seed_num);
                 ++Gate2_seed_num;
+                if(Gate2_seed_num > 32)
+                {
+                    Gate2_seed_num = 1;
+                    receive_seed_num=0b0;
+                }
             }
             break;
         }
@@ -457,31 +445,14 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 }
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
-    if (huart->Instance == USART1) {
-        if((receive_usart1_flag&0x8000)==0)
-        {
-            if(receive_usart1_flag&0x4000)
-            {
-                receive_usart1_flag = 0;
-            }
-            else
-                receive_usart1_flag|=0x8000;
+    if (huart->Instance == USART1)
+    {
+        if(aRxBuffer[0] >0 && aRxBuffer[0] < 33) {
+            receive_seed_num |= 0b1<<aRxBuffer[0];
         }
-        else{
-            if(aRxBuffer[0] == 0x0d)
-            {
-                receive_usart1_flag|=0x4000;
-            }
-            else {
-                receive_usart1[receive_usart1_flag&0x3fff] = aRxBuffer[0];
-                ++receive_usart1_flag;
-                if(receive_usart1_flag>=USART_REC_LEN)
-                {
-                    receive_usart1_flag = 0;
-                }
-            }
-        }
+        HAL_UART_Receive_IT(&huart1, (uint8_t *)aRxBuffer, RXBUFFERSIZE);
     }
+
 }
 uint32_t speed2delay_sus(uint32_t speed)//speed 1r/min == 1/60000r/ms, 1ms = 2 * 1000 sus
 {
@@ -565,31 +536,15 @@ void PY_Delay_semius(uint32_t Delay)
 }
 void dif_fluoresent_seed(uint8_t num_Light_Gate2)
 {
-    if(num_in_list(receive_seed_num,num_Light_Gate2))
+    uint8_t temp = 0b1;
+    temp = temp<<num_Light_Gate2;
+    if(receive_seed_num&temp)
     {
         printf("Match successfully!\r\n");//use Spray valve here
     }
     else printf("Fail to match seed!\r\n");
 }
 
-int num_in_list(uint8_t* num_list, uint8_t number)
-{
-    if (num_list == NULL)
-        return 0;
-    if(num_list[number]==number)
-        return 1;//number in num_list
-    else
-        return 0;
-
-}
-
-void reset_receive_seed_num(uint8_t* num_list)
-{
-    for(int i=0;i<ARRAY_SIZE(num_list);i++)
-    {
-        num_list[i] = 0;
-    }
-}
 /* USER CODE END 4 */
 
 /**

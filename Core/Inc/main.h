@@ -60,7 +60,8 @@ void Error_Handler(void);
 
 /* USER CODE BEGIN Private defines */
 #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof(*arr))
-#define RXBUFFERSIZE  1 //接收缓冲区大小
+#define RXBUFFERSIZE  200 //接收缓冲区大小
+#define TXBUFFERSIZE  200 //发送缓冲区大小
 #define USART_REC_LEN 200//定义最大接收字节数 200
 /* USER CODE END Private defines */
 
