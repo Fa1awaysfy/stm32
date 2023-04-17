@@ -59,10 +59,7 @@ void Error_Handler(void);
 /* Private defines -----------------------------------------------------------*/
 
 /* USER CODE BEGIN Private defines */
-#define ARRAY_SIZE(arr) (sizeof(arr) / sizeof(*arr))
-#define RXBUFFERSIZE  1 //接收缓冲区大小
-#define TXBUFFERSIZE  200 //发送缓冲区大小
-#define USART_REC_LEN 4//定义最大接收字节数 200
+#define USART_REC_LEN 4//定义最大接收字节数 4
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

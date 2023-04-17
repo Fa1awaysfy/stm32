@@ -47,17 +47,12 @@ UART_HandleTypeDef huart1;
 /* USER CODE BEGIN PV */
 __IO float semiusDelayBase;
 static uint8_t pul_sta=1,dir_sta=1,ena_sta=1;
-//static uint8_t led0sta = 0,led1sta = 0;
 static uint32_t set_speed = 700;//700r/min motor output without reducer
-//static uint32_t current_speed = 0;
 static uint32_t delay_time = 1000000;
 
 static uint8_t Gate1_seed_num = 1, Gate2_seed_num = 1;
 static uint32_t receive_seed_num = 0b0;
-static uint8_t aRxBuffer[RXBUFFERSIZE];
-static uint8_t aTxBuffer[TXBUFFERSIZE];
 static uint8_t receive_usart1[USART_REC_LEN];
-static uint8_t usart1_cnt = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -395,7 +390,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
             break;
         }
         case GPIO_PIN_6: {//key0
-            if (Light_Gate1 == 0) {// minus velocity
+            if (Light_Gate1 == 0) {
                 printf("No %d passed! \r\n",Gate1_seed_num);
                 ++Gate1_seed_num;
                 if(Gate1_seed_num > 32)
@@ -405,7 +400,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
             }
             break;
         }case GPIO_PIN_7: {//key1
-            if (Light_Gate2 == 0) {// plus velocity
+            if (Light_Gate2 == 0) {
                 printf("No %d passed\r\n",Gate2_seed_num);
                 if(Gate2_seed_num > Gate1_seed_num){
                     printf("Error, Gate2_seed_num > Gate1_seed_num\r\n");
