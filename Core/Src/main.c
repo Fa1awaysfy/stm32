@@ -53,10 +53,11 @@ static uint32_t set_speed = 700;//700r/min motor output without reducer
 static uint32_t delay_time = 1000000;
 
 static uint8_t Gate1_seed_num = 1, Gate2_seed_num = 1;
-static uint8_t receive_seed_num = 0b0;
+static uint32_t receive_seed_num = 0b0;
 static uint8_t aRxBuffer[RXBUFFERSIZE];
 static uint8_t aTxBuffer[TXBUFFERSIZE];
 static uint8_t receive_usart1[USART_REC_LEN];
+static uint8_t usart1_cnt = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -141,7 +142,7 @@ int main(void)
   PY_semiusDelayTest();
   PY_semiusDelayOptimize();
   printf("Motor control, pul_sta = %d, dir_sta = %d, ena_sta = %d\r\n",pul_sta,dir_sta,ena_sta);
-  HAL_UART_Receive_IT(&huart1, (uint8_t *)aRxBuffer, RXBUFFERSIZE);
+  HAL_UART_Receive_IT(&huart1, (uint8_t *)receive_usart1, USART_REC_LEN);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -152,13 +153,6 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
     HAL_IWDG_Refresh(&hiwdg1);
-//    for(uint8_t i = 0;i<20;i++)
-//        printf("aRxBuffer[%d] = %c\r\n", i, aRxBuffer[i]);
-    if(receive_seed_num != 0b0)
-    {
-        printf("receive_seed_num = %d\r",receive_seed_num);
-    }
-    HAL_Delay(1000);
   }
   /* USER CODE END 3 */
 }
@@ -286,7 +280,7 @@ static void MX_USART1_UART_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN USART1_Init 2 */
-    HAL_UART_Receive_IT(&huart1, (uint8_t *)aRxBuffer, RXBUFFERSIZE);
+    HAL_UART_Receive_IT(&huart1, (uint8_t *)receive_usart1, USART_REC_LEN);
   /* USER CODE END USART1_Init 2 */
 
 }
@@ -445,12 +439,26 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 }
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
-    if (huart->Instance == USART1)
+    if(huart->Instance==USART1)//如果是串口1
     {
-        if(aRxBuffer[0] >0 && aRxBuffer[0] < 33) {
-            receive_seed_num |= 0b1<<aRxBuffer[0];
+        uint8_t temp_num=0;
+        if(receive_usart1[2] == 0xd && receive_usart1[0]>='0' && receive_usart1[0]<='9'
+            &&receive_usart1[1]>= '0' && receive_usart1[1]<='9')//如果接收到的数据是回车
+        {
+            receive_usart1[2] = '\0';
+            printf("receive_usart1 = %s\r\n",receive_usart1);
+            temp_num = (receive_usart1[0]-'0')*10 + (receive_usart1[1]-'0');
+
+
+            if(receive_seed_num != 0b0 && temp_num<=32 && temp_num>0)
+            {
+                receive_seed_num |= (0b1 << (temp_num-1));
+                printf("receive_seed_num = %lu\r",receive_seed_num);
+            }
         }
-        HAL_UART_Receive_IT(&huart1, (uint8_t *)aRxBuffer, RXBUFFERSIZE);
+        HAL_UART_Receive_IT(&huart1, receive_usart1, USART_REC_LEN);
+
+//        HAL_UART_Receive_IT(&huart1, (uint8_t *)aRxBuffer, RXBUFFERSIZE);//开启DMA接收
     }
 
 }
@@ -545,6 +553,17 @@ void dif_fluoresent_seed(uint8_t num_Light_Gate2)
     else printf("Fail to match seed!\r\n");
 }
 
+void transformchar2int()
+{
+    for(uint8_t i = 0; i < sizeof(1);i++)
+    {
+        if(receive_usart1[i] != 0xd)
+        {
+            receive_seed_num = receive_seed_num | 0b1;
+        }
+
+    }
+}
 /* USER CODE END 4 */
 
 /**
