@@ -40,6 +40,8 @@
 
 /* Private variables ---------------------------------------------------------*/
 
+FDCAN_HandleTypeDef hfdcan1;
+
 IWDG_HandleTypeDef hiwdg1;
 
 UART_HandleTypeDef huart1;
@@ -53,6 +55,11 @@ static uint32_t delay_time = 1000000;
 static uint8_t Gate1_seed_num = 1, Gate2_seed_num = 1;
 static uint32_t receive_seed_num = 0b0;
 static uint8_t receive_usart1[USART_REC_LEN];
+FDCAN_TxHeaderTypeDef TxHeader;
+uint8_t *TxData;
+
+FDCAN_RxHeaderTypeDef RxHeader;
+uint8_t *RxData;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -60,6 +67,7 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_IWDG1_Init(void);
+static void MX_FDCAN1_Init(void);
 /* USER CODE BEGIN PFP */
 void PY_semiusDelayTest(void);
 void PY_Delay_semius_t(uint32_t Delay);
@@ -70,8 +78,10 @@ void motor_init();
 
 uint32_t speed2delay_sus(uint32_t speed);//speed r/min
 
-uint8_t sign(uint8_t num);
 void dif_fluoresent_seed(uint8_t num_Light_Gate2);
+
+uint8_t FDCAN1_Send_Msg(uint8_t * msg,uint32_t len);
+uint8_t FDCAN1_Receive_Msg(uint8_t *buf);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -108,8 +118,6 @@ void dif_fluoresent_seed(uint8_t num_Light_Gate2);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-    uint8_t len;
-    uint16_t times = 0;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -132,6 +140,7 @@ int main(void)
   MX_GPIO_Init();
   MX_USART1_UART_Init();
   MX_IWDG1_Init();
+  MX_FDCAN1_Init();
   /* USER CODE BEGIN 2 */
   motor_init();
   PY_semiusDelayTest();
@@ -148,6 +157,14 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
     HAL_IWDG_Refresh(&hiwdg1);
+    pul_sta = !pul_sta;
+    PUL_minus(pul_sta);
+    PY_Delay_semius(speed2delay_sus(set_speed));
+    uint8_t receive_can_data[8];
+      if(FDCAN1_Receive_Msg(receive_usart1))
+    {
+        printf("CAN Receive data: %s\r\n",receive_usart1);
+    }
   }
   /* USER CODE END 3 */
 }
@@ -178,7 +195,16 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.HSIState = RCC_HSI_DIV1;
   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
   RCC_OscInitStruct.LSIState = RCC_LSI_ON;
-  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
+  RCC_OscInitStruct.PLL.PLLM = 4;
+  RCC_OscInitStruct.PLL.PLLN = 9;
+  RCC_OscInitStruct.PLL.PLLP = 2;
+  RCC_OscInitStruct.PLL.PLLQ = 3;
+  RCC_OscInitStruct.PLL.PLLR = 2;
+  RCC_OscInitStruct.PLL.PLLRGE = RCC_PLL1VCIRANGE_3;
+  RCC_OscInitStruct.PLL.PLLVCOSEL = RCC_PLL1VCOMEDIUM;
+  RCC_OscInitStruct.PLL.PLLFRACN = 3072;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
     Error_Handler();
@@ -201,6 +227,60 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+}
+
+/**
+  * @brief FDCAN1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_FDCAN1_Init(void)
+{
+
+  /* USER CODE BEGIN FDCAN1_Init 0 */
+
+  /* USER CODE END FDCAN1_Init 0 */
+
+  /* USER CODE BEGIN FDCAN1_Init 1 */
+
+  /* USER CODE END FDCAN1_Init 1 */
+  hfdcan1.Instance = FDCAN1;
+  hfdcan1.Init.FrameFormat = FDCAN_FRAME_CLASSIC;
+  hfdcan1.Init.Mode = FDCAN_MODE_INTERNAL_LOOPBACK;
+  hfdcan1.Init.AutoRetransmission = DISABLE;
+  hfdcan1.Init.TransmitPause = DISABLE;
+  hfdcan1.Init.ProtocolException = DISABLE;
+  hfdcan1.Init.NominalPrescaler = 16;
+  hfdcan1.Init.NominalSyncJumpWidth = 1;
+  hfdcan1.Init.NominalTimeSeg1 = 2;
+  hfdcan1.Init.NominalTimeSeg2 = 2;
+  hfdcan1.Init.DataPrescaler = 1;
+  hfdcan1.Init.DataSyncJumpWidth = 1;
+  hfdcan1.Init.DataTimeSeg1 = 1;
+  hfdcan1.Init.DataTimeSeg2 = 1;
+  hfdcan1.Init.MessageRAMOffset = 0;
+  hfdcan1.Init.StdFiltersNbr = 0;
+  hfdcan1.Init.ExtFiltersNbr = 0;
+  hfdcan1.Init.RxFifo0ElmtsNbr = 0;
+  hfdcan1.Init.RxFifo0ElmtSize = FDCAN_DATA_BYTES_8;
+  hfdcan1.Init.RxFifo1ElmtsNbr = 0;
+  hfdcan1.Init.RxFifo1ElmtSize = FDCAN_DATA_BYTES_8;
+  hfdcan1.Init.RxBuffersNbr = 0;
+  hfdcan1.Init.RxBufferSize = FDCAN_DATA_BYTES_8;
+  hfdcan1.Init.TxEventsNbr = 0;
+  hfdcan1.Init.TxBuffersNbr = 0;
+  hfdcan1.Init.TxFifoQueueElmtsNbr = 0;
+  hfdcan1.Init.TxFifoQueueMode = FDCAN_TX_FIFO_OPERATION;
+  hfdcan1.Init.TxElmtSize = FDCAN_DATA_BYTES_8;
+  if (HAL_FDCAN_Init(&hfdcan1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN FDCAN1_Init 2 */
+
+
+    /* USER CODE END FDCAN1_Init 2 */
+
 }
 
 /**
@@ -301,7 +381,7 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0|GPIO_PIN_1, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOI, GPIO_PIN_5|GPIO_PIN_6|GPIO_PIN_7, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(GPIOI, GPIO_PIN_5|GPIO_PIN_7, GPIO_PIN_SET);
 
   /*Configure GPIO pin : PC13 */
   GPIO_InitStruct.Pin = GPIO_PIN_13;
@@ -331,14 +411,14 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PI5 PI6 PI7 */
-  GPIO_InitStruct.Pin = GPIO_PIN_5|GPIO_PIN_6|GPIO_PIN_7;
+  /*Configure GPIO pins : PI5 PI7 */
+  GPIO_InitStruct.Pin = GPIO_PIN_5|GPIO_PIN_7;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
   HAL_GPIO_Init(GPIOI, &GPIO_InitStruct);
 
   /* EXTI interrupt init*/
@@ -364,11 +444,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
     switch (GPIO_Pin) {
         case GPIO_PIN_0: {//key_up high voltage enable
-            if (KEY_UP == 1) {// Reverse motor dirction
-                dir_sta = !dir_sta;
-                DIR_minus(dir_sta);
-                printf("key_up is touched, reverse\r\n");
-                printf("dir_sta is %d\r\n",dir_sta);
+            if (KEY_UP == 1) {
             }
             break;
         }
@@ -389,7 +465,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
             }
             break;
         }
-        case GPIO_PIN_6: {//key0
+        case GPIO_PIN_6: {
             if (Light_Gate1 == 0) {
                 printf("No %d passed! \r\n",Gate1_seed_num);
                 ++Gate1_seed_num;
@@ -399,7 +475,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
                 }
             }
             break;
-        }case GPIO_PIN_7: {//key1
+        }case GPIO_PIN_7: {
             if (Light_Gate2 == 0) {
                 printf("No %d passed\r\n",Gate2_seed_num);
                 if(Gate2_seed_num > Gate1_seed_num){
@@ -419,7 +495,6 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
         case GPIO_PIN_13: {//key2
             if (KEY2 == 0) {// start/pause the motor,disable
                 printf("key2 is touched, motor status changes\r\n");
-//                current_speed = 0;
                 ena_sta = !ena_sta;
                 ENA_minus(ena_sta);
                 LED0RED(ena_sta);
@@ -444,16 +519,20 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
             printf("receive_usart1 = %s\r\n",receive_usart1);
             temp_num = (receive_usart1[0]-'0')*10 + (receive_usart1[1]-'0');
 
-
-            if(receive_seed_num != 0b0 && temp_num<=32 && temp_num>0)
+            if(temp_num<=32 && temp_num>0)
             {
                 receive_seed_num |= (0b1 << (temp_num-1));
-                printf("receive_seed_num = %lu\r",receive_seed_num);
+                printf("receive_seed_num = %lu\r\n",receive_seed_num);
+                if(FDCAN1_Send_Msg(receive_usart1,USART_REC_LEN))
+                {
+                    printf("send data to CAN1 success!\r\n");
+                } else
+                {
+                    printf("send data to CAN1 failed!\r\n");
+                }
             }
         }
         HAL_UART_Receive_IT(&huart1, receive_usart1, USART_REC_LEN);
-
-//        HAL_UART_Receive_IT(&huart1, (uint8_t *)aRxBuffer, RXBUFFERSIZE);//开启DMA接收
     }
 
 }
@@ -463,8 +542,10 @@ uint32_t speed2delay_sus(uint32_t speed)//speed 1r/min == 1/60000r/ms, 1ms = 2 *
     {
         return 1000000;
     }
-    uint16_t step = 1600; //check figure, current status is sw5 off, sw6 off, sw7 on, sw8 on.
-    delay_time = 2000.0 * 60000.0/(step*speed);
+    uint16_t step = 400; //check figure, current status is sw5 off, sw6 on, sw7 on, sw8 on.
+    delay_time =(2000.0 * 60000.0/(step*speed));
+    if(delay_time<3)
+        delay_time = 3;
     return delay_time;
 }
 
@@ -473,19 +554,6 @@ void motor_init()
     PUL_minus(pul_sta);
     DIR_minus(dir_sta);
     ENA_minus(ena_sta);
-}
-
-uint8_t sign(uint8_t num)
-{
-    if(num > 0) {
-        return 7;
-    }
-    else if(num == 0)
-    {
-        return 0;
-    }
-    else
-        return -7;
 }
 
 void PY_semiusDelayTest(void)
@@ -547,17 +615,25 @@ void dif_fluoresent_seed(uint8_t num_Light_Gate2)
     }
     else printf("Fail to match seed!\r\n");
 }
-
-void transformchar2int()
+uint8_t FDCAN1_Send_Msg(uint8_t * msg,uint32_t len)
 {
-    for(uint8_t i = 0; i < sizeof(1);i++)
-    {
-        if(receive_usart1[i] != 0xd)
-        {
-            receive_seed_num = receive_seed_num | 0b1;
-        }
+    TxHeader.Identifier=0x12;                           //32位ID
+    TxHeader.IdType=FDCAN_STANDARD_ID;                  //标准ID
+    TxHeader.TxFrameType=FDCAN_DATA_FRAME;              //数据帧
+    TxHeader.DataLength=len;                            //数据长度
+    TxHeader.ErrorStateIndicator=FDCAN_ESI_ACTIVE;
+    TxHeader.BitRateSwitch=FDCAN_BRS_OFF;               //关闭速率切换
+    TxHeader.FDFormat=FDCAN_CLASSIC_CAN;                //传统的CAN模式
+    TxHeader.TxEventFifoControl=FDCAN_NO_TX_EVENTS;     //无发送事件
+    TxHeader.MessageMarker=0;
 
-    }
+    if(HAL_FDCAN_AddMessageToTxFifoQ(&hfdcan1,&TxHeader,msg)!=HAL_OK) return 1;//发送
+    return 0;
+}
+uint8_t FDCAN1_Receive_Msg(uint8_t *buf)
+{
+    if(HAL_FDCAN_GetRxMessage(&hfdcan1,FDCAN_RX_FIFO0,&RxHeader,buf)!=HAL_OK)return 0;//接收数据
+    return RxHeader.DataLength>>16;
 }
 /* USER CODE END 4 */
 
