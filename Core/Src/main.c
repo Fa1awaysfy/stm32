@@ -157,13 +157,14 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
     HAL_IWDG_Refresh(&hiwdg1);
-    pul_sta = !pul_sta;
-    PUL_minus(pul_sta);
-    PY_Delay_semius(speed2delay_sus(set_speed));
+    HAL_UART_Receive_IT(&huart1, (uint8_t *)receive_usart1, USART_REC_LEN);
+//    pul_sta = !pul_sta;
+//    PUL_minus(pul_sta);
+//    PY_Delay_semius(speed2delay_sus(set_speed));
     uint8_t receive_can_data[8];
-      if(FDCAN1_Receive_Msg(receive_usart1))
+    if(FDCAN1_Receive_Msg(receive_can_data))
     {
-        printf("CAN Receive data: %s\r\n",receive_usart1);
+        printf("CAN Receive data: %s\r\n",receive_can_data);
     }
   }
   /* USER CODE END 3 */
@@ -278,8 +279,8 @@ static void MX_FDCAN1_Init(void)
   }
   /* USER CODE BEGIN FDCAN1_Init 2 */
 
-
-    /* USER CODE END FDCAN1_Init 2 */
+  HAL_FDCAN_ActivateNotification(&hfdcan1, FDCAN_IT_RX_FIFO0_NEW_MESSAGE, FDCAN_IT_TX_COMPLETE);
+  /* USER CODE END FDCAN1_Init 2 */
 
 }
 
@@ -521,8 +522,6 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 
             if(temp_num<=32 && temp_num>0)
             {
-                receive_seed_num |= (0b1 << (temp_num-1));
-                printf("receive_seed_num = %lu\r\n",receive_seed_num);
                 if(FDCAN1_Send_Msg(receive_usart1,USART_REC_LEN))
                 {
                     printf("send data to CAN1 success!\r\n");
@@ -532,7 +531,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
                 }
             }
         }
-        HAL_UART_Receive_IT(&huart1, receive_usart1, USART_REC_LEN);
+        HAL_UART_Receive_IT(&huart1, (uint8_t*)receive_usart1, USART_REC_LEN);
     }
 
 }
@@ -543,7 +542,7 @@ uint32_t speed2delay_sus(uint32_t speed)//speed 1r/min == 1/60000r/ms, 1ms = 2 *
         return 1000000;
     }
     uint16_t step = 400; //check figure, current status is sw5 off, sw6 on, sw7 on, sw8 on.
-    delay_time =(2000.0 * 60000.0/(step*speed));
+    delay_time =(2000.0 * 60000.0/(step*speed) + 0.5);
     if(delay_time<3)
         delay_time = 3;
     return delay_time;
@@ -634,6 +633,34 @@ uint8_t FDCAN1_Receive_Msg(uint8_t *buf)
 {
     if(HAL_FDCAN_GetRxMessage(&hfdcan1,FDCAN_RX_FIFO0,&RxHeader,buf)!=HAL_OK)return 0;//接收数据
     return RxHeader.DataLength>>16;
+}
+
+void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
+{
+    if(hfdcan == &hfdcan1) {
+        if ((RxFifo0ITs & FDCAN_IT_RX_FIFO0_NEW_MESSAGE) != RESET) {
+            Error_Handler();
+        }
+        uint8_t buf[8];
+        uint8_t len;
+        len = FDCAN1_Receive_Msg(buf);
+        if (len) {
+            printf("receive can success\r\n");
+            uint8_t temp_num = 0;
+            if (buf[2] == 0xd && buf[0] >= '0' && buf[0] <= '9'
+                && buf[1] >= '0' && buf[1] <= '9')//如果接收到的数据是回车
+            {
+                buf[2] = '\0';
+                printf("receive_can = %s\r\n", buf);
+                temp_num = (buf[0] - '0') * 10 + (buf[1] - '0');
+
+                if (temp_num <= 32 && temp_num > 0) {
+                    receive_seed_num |= (0b1 << (temp_num - 1));
+                    printf("receive_seed_num = %lu\r\n", receive_seed_num);
+                }
+            }
+        }
+    }
 }
 /* USER CODE END 4 */
 
