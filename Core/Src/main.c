@@ -44,12 +44,14 @@ FDCAN_HandleTypeDef hfdcan1;
 
 IWDG_HandleTypeDef hiwdg1;
 
+TIM_HandleTypeDef htim1;
+
 UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
 __IO float semiusDelayBase;
 static uint8_t pul_sta=1,dir_sta=1,ena_sta=1;
-static uint32_t set_speed = 700;//700r/min motor output without reducer
+static uint32_t set_speed = 70;//70r/min motor output without reducer
 static uint32_t delay_time = 1000000;
 
 static uint8_t Gate1_seed_num = 1, Gate2_seed_num = 1;
@@ -68,6 +70,7 @@ static void MX_GPIO_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_IWDG1_Init(void);
 static void MX_FDCAN1_Init(void);
+static void MX_TIM1_Init(void);
 /* USER CODE BEGIN PFP */
 void PY_semiusDelayTest(void);
 void PY_Delay_semius_t(uint32_t Delay);
@@ -141,6 +144,7 @@ int main(void)
   MX_USART1_UART_Init();
   MX_IWDG1_Init();
   MX_FDCAN1_Init();
+  MX_TIM1_Init();
   /* USER CODE BEGIN 2 */
   motor_init();
   PY_semiusDelayTest();
@@ -158,9 +162,6 @@ int main(void)
     /* USER CODE BEGIN 3 */
     HAL_IWDG_Refresh(&hiwdg1);
     HAL_UART_Receive_IT(&huart1, (uint8_t *)receive_usart1, USART_REC_LEN);
-//    pul_sta = !pul_sta;
-//    PUL_minus(pul_sta);
-//    PY_Delay_semius(speed2delay_sus(set_speed));
     uint8_t receive_can_data[8];
     if(FDCAN1_Receive_Msg(receive_can_data))
     {
@@ -239,7 +240,7 @@ static void MX_FDCAN1_Init(void)
 {
 
   /* USER CODE BEGIN FDCAN1_Init 0 */
-
+    FDCAN_FilterTypeDef hfdcan1_filter;
   /* USER CODE END FDCAN1_Init 0 */
 
   /* USER CODE BEGIN FDCAN1_Init 1 */
@@ -278,8 +279,19 @@ static void MX_FDCAN1_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN FDCAN1_Init 2 */
+  hfdcan1_filter.IdType = FDCAN_STANDARD_ID;
+    hfdcan1_filter.FilterIndex = 0;
+    hfdcan1_filter.FilterType = FDCAN_FILTER_MASK;
+    hfdcan1_filter.FilterConfig = FDCAN_FILTER_TO_RXFIFO0;
+    hfdcan1_filter.FilterID1 = 0x0000;
+    hfdcan1_filter.FilterID2 = 0x0000;
+    if(HAL_FDCAN_ConfigFilter(&hfdcan1, &hfdcan1_filter) != HAL_OK)
+    {
+      Error_Handler();
+    }
+    HAL_FDCAN_Start(&hfdcan1);
 
-  HAL_FDCAN_ActivateNotification(&hfdcan1, FDCAN_IT_RX_FIFO0_NEW_MESSAGE, FDCAN_IT_TX_COMPLETE);
+  HAL_FDCAN_ActivateNotification(&hfdcan1, FDCAN_IT_RX_FIFO0_NEW_MESSAGE, 0);
   /* USER CODE END FDCAN1_Init 2 */
 
 }
@@ -310,6 +322,53 @@ static void MX_IWDG1_Init(void)
   /* USER CODE BEGIN IWDG1_Init 2 */
 
   /* USER CODE END IWDG1_Init 2 */
+
+}
+
+/**
+  * @brief TIM1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM1_Init(void)
+{
+
+  /* USER CODE BEGIN TIM1_Init 0 */
+
+  /* USER CODE END TIM1_Init 0 */
+
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+  /* USER CODE BEGIN TIM1_Init 1 */
+
+  /* USER CODE END TIM1_Init 1 */
+  htim1.Instance = TIM1;
+  htim1.Init.Prescaler = 0;
+  htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim1.Init.Period = 2143;
+  htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim1.Init.RepetitionCounter = 0;
+  htim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim1, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterOutputTrigger2 = TIM_TRGO2_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim1, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM1_Init 2 */
+
+  /* USER CODE END TIM1_Init 2 */
 
 }
 
@@ -451,15 +510,15 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
         }
         case GPIO_PIN_2: {//key1
             if (KEY1 == 0) {// plus velocity
-               set_speed += 70;
+               set_speed += 7;
                 printf("speed up to %lu!\r\n",set_speed);
             }
             break;
         }
         case GPIO_PIN_3: {//key0
             if (KEY0 == 0) {// minus velocity
-                if(set_speed > 70)
-                    set_speed -= 70;
+                if(set_speed > 7)
+                    set_speed -= 7;
                 else
                     set_speed = 0;
                 printf("speed down to %lu!\r\n",set_speed);
@@ -519,21 +578,52 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
             receive_usart1[2] = '\0';
             printf("receive_usart1 = %s\r\n",receive_usart1);
             temp_num = (receive_usart1[0]-'0')*10 + (receive_usart1[1]-'0');
-
             if(temp_num<=32 && temp_num>0)
             {
                 if(FDCAN1_Send_Msg(receive_usart1,USART_REC_LEN))
-                {
                     printf("send data to CAN1 success!\r\n");
-                } else
-                {
+                else
                     printf("send data to CAN1 failed!\r\n");
-                }
             }
         }
         HAL_UART_Receive_IT(&huart1, (uint8_t*)receive_usart1, USART_REC_LEN);
     }
 
+}
+void HAL_TIM_TriggerCallback(TIM_HandleTypeDef *htim)
+{
+    if(htim->Instance==TIM1)
+    {
+        pul_sta = !pul_sta;
+        PUL_minus(pul_sta);
+        LED1GREEN(pul_sta);
+    }
+}
+void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
+{
+    if(hfdcan == &hfdcan1) {
+        if ((RxFifo0ITs & FDCAN_IT_RX_FIFO0_NEW_MESSAGE) != RESET) {
+            Error_Handler();
+        }
+        uint8_t buf[8];
+        uint8_t len;
+        len = FDCAN1_Receive_Msg(buf);
+        if (len) {
+            printf("receive data from can success\r\n");
+            uint8_t temp_num;
+            if (buf[2] == 0xd && buf[0] >= '0' && buf[0] <= '9'
+                && buf[1] >= '0' && buf[1] <= '9')//如果接收到的数据是回车
+            {
+                buf[2] = '\0';
+                printf("receive_can = %s\r\n", buf);
+                temp_num = (buf[0] - '0') * 10 + (buf[1] - '0');
+                if (temp_num <= 32 && temp_num > 0) {
+                    receive_seed_num |= (0b1 << (temp_num - 1));
+                    printf("receive_seed_num = %lu\r\n", receive_seed_num);
+                }
+            }
+        }
+    }
 }
 uint32_t speed2delay_sus(uint32_t speed)//speed 1r/min == 1/60000r/ms, 1ms = 2 * 1000 sus
 {
@@ -542,7 +632,7 @@ uint32_t speed2delay_sus(uint32_t speed)//speed 1r/min == 1/60000r/ms, 1ms = 2 *
         return 1000000;
     }
     uint16_t step = 400; //check figure, current status is sw5 off, sw6 on, sw7 on, sw8 on.
-    delay_time =(2000.0 * 60000.0/(step*speed) + 0.5);
+    delay_time =(1000.0 * 60000.0/(step*speed) + 0.5);
     if(delay_time<3)
         delay_time = 3;
     return delay_time;
@@ -631,37 +721,11 @@ uint8_t FDCAN1_Send_Msg(uint8_t * msg,uint32_t len)
 }
 uint8_t FDCAN1_Receive_Msg(uint8_t *buf)
 {
-    if(HAL_FDCAN_GetRxMessage(&hfdcan1,FDCAN_RX_FIFO0,&RxHeader,buf)!=HAL_OK)return 0;//接收数据
+    if(HAL_FDCAN_GetRxMessage(&hfdcan1,FDCAN_RX_FIFO0,&RxHeader,buf)!=HAL_OK)
+        return 0;//接收数据
     return RxHeader.DataLength>>16;
 }
 
-void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
-{
-    if(hfdcan == &hfdcan1) {
-        if ((RxFifo0ITs & FDCAN_IT_RX_FIFO0_NEW_MESSAGE) != RESET) {
-            Error_Handler();
-        }
-        uint8_t buf[8];
-        uint8_t len;
-        len = FDCAN1_Receive_Msg(buf);
-        if (len) {
-            printf("receive can success\r\n");
-            uint8_t temp_num = 0;
-            if (buf[2] == 0xd && buf[0] >= '0' && buf[0] <= '9'
-                && buf[1] >= '0' && buf[1] <= '9')//如果接收到的数据是回车
-            {
-                buf[2] = '\0';
-                printf("receive_can = %s\r\n", buf);
-                temp_num = (buf[0] - '0') * 10 + (buf[1] - '0');
-
-                if (temp_num <= 32 && temp_num > 0) {
-                    receive_seed_num |= (0b1 << (temp_num - 1));
-                    printf("receive_seed_num = %lu\r\n", receive_seed_num);
-                }
-            }
-        }
-    }
-}
 /* USER CODE END 4 */
 
 /**
