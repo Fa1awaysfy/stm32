@@ -21,7 +21,6 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "stm32h7xx_it.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -162,6 +161,9 @@ int main(void)
     /* USER CODE BEGIN 3 */
     HAL_IWDG_Refresh(&hiwdg1);
     HAL_UART_Receive_IT(&huart1, (uint8_t *)receive_usart1, USART_REC_LEN);
+    pul_sta = !pul_sta;
+    PUL_minus(pul_sta);
+    PY_Delay_semius_t(speed2delay_sus(set_speed));
     uint8_t receive_can_data[8];
     if(FDCAN1_Receive_Msg(receive_can_data))
     {
@@ -631,7 +633,7 @@ uint32_t speed2delay_sus(uint32_t speed)//speed 1r/min == 1/60000r/ms, 1ms = 2 *
     {
         return 1000000;
     }
-    uint16_t step = 400; //check figure, current status is sw5 off, sw6 on, sw7 on, sw8 on.
+    uint16_t step = 10000; //check figure, current status is sw5 off, sw6 on, sw7 off, sw8 off.
     delay_time =(1000.0 * 60000.0/(step*speed) + 0.5);
     if(delay_time<3)
         delay_time = 3;
