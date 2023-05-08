@@ -50,7 +50,7 @@ UART_HandleTypeDef huart1;
 /* USER CODE BEGIN PV */
 __IO float semiusDelayBase;
 static uint8_t pul_sta=1,dir_sta=1,ena_sta=1;
-static uint32_t set_speed = 70;//70r/min motor output without reducer
+static uint32_t set_speed = 100;//set speed is 100 actually 70r/min motor output without reducer
 static uint32_t delay_time = 1000000;
 
 static uint8_t Gate1_seed_num = 1, Gate2_seed_num = 1;
@@ -164,11 +164,11 @@ int main(void)
     pul_sta = !pul_sta;
     PUL_minus(pul_sta);
     PY_Delay_semius_t(speed2delay_sus(set_speed));
-    uint8_t receive_can_data[8];
-    if(FDCAN1_Receive_Msg(receive_can_data))
-    {
-        printf("CAN Receive data: %s\r\n",receive_can_data);
-    }
+//    uint8_t receive_can_data[8];
+//    if(FDCAN1_Receive_Msg(receive_can_data))
+//    {
+//        printf("CAN Receive data: %s\r\n",receive_can_data);
+//    }
   }
   /* USER CODE END 3 */
 }
@@ -250,7 +250,7 @@ static void MX_FDCAN1_Init(void)
   /* USER CODE END FDCAN1_Init 1 */
   hfdcan1.Instance = FDCAN1;
   hfdcan1.Init.FrameFormat = FDCAN_FRAME_CLASSIC;
-  hfdcan1.Init.Mode = FDCAN_MODE_INTERNAL_LOOPBACK;
+  hfdcan1.Init.Mode = FDCAN_MODE_NORMAL;
   hfdcan1.Init.AutoRetransmission = DISABLE;
   hfdcan1.Init.TransmitPause = DISABLE;
   hfdcan1.Init.ProtocolException = DISABLE;
@@ -633,7 +633,7 @@ uint32_t speed2delay_sus(uint32_t speed)//speed 1r/min == 1/60000r/ms, 1ms = 2 *
     {
         return 1000000;
     }
-    uint16_t step = 10000; //check figure, current status is sw5 off, sw6 on, sw7 off, sw8 off.
+    uint16_t step = 6400; //check figure, current status is sw5 off, sw6 on, sw7 off, sw8 on.
     delay_time =(1000.0 * 60000.0/(step*speed) + 0.5);
     if(delay_time<3)
         delay_time = 3;
