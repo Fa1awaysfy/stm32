@@ -43,7 +43,7 @@ FDCAN_HandleTypeDef hfdcan1;
 
 IWDG_HandleTypeDef hiwdg1;
 
-TIM_HandleTypeDef htim1;
+TIM_HandleTypeDef htim3;
 
 UART_HandleTypeDef huart1;
 
@@ -56,6 +56,8 @@ static uint32_t delay_time = 1000000;
 static uint8_t Gate1_seed_num = 1, Gate2_seed_num = 1;
 static uint32_t receive_seed_num = 0b0;
 static uint8_t receive_usart1[USART_REC_LEN];
+
+static uint8_t LEDRED_Status= 0, LEDGREEN_Status = 0;
 FDCAN_TxHeaderTypeDef TxHeader;
 uint8_t *TxData;
 
@@ -69,7 +71,7 @@ static void MX_GPIO_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_IWDG1_Init(void);
 static void MX_FDCAN1_Init(void);
-static void MX_TIM1_Init(void);
+static void MX_TIM3_Init(void);
 /* USER CODE BEGIN PFP */
 void PY_semiusDelayTest(void);
 void PY_Delay_semius_t(uint32_t Delay);
@@ -88,7 +90,6 @@ uint8_t FDCAN1_Receive_Msg(uint8_t *buf);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
 
 #define LED0RED(n) (n ? HAL_GPIO_WritePin(GPIOB,GPIO_PIN_0,GPIO_PIN_SET): \
                 HAL_GPIO_WritePin(GPIOB,GPIO_PIN_0,GPIO_PIN_RESET)) //led0
@@ -110,7 +111,6 @@ uint8_t FDCAN1_Receive_Msg(uint8_t *buf);
 #define ENA_minus(n) (n ? HAL_GPIO_WritePin(GPIOI,GPIO_PIN_7,GPIO_PIN_SET): \
                 HAL_GPIO_WritePin(GPIOI,GPIO_PIN_7,GPIO_PIN_RESET)) // Enable signal
 
-//#define select(n) ((n) > 1000 ? 1000 : (n))
 /* USER CODE END 0 */
 
 /**
@@ -143,7 +143,7 @@ int main(void)
   MX_USART1_UART_Init();
   MX_IWDG1_Init();
   MX_FDCAN1_Init();
-  MX_TIM1_Init();
+  MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
   motor_init();
   PY_semiusDelayTest();
@@ -164,11 +164,6 @@ int main(void)
     pul_sta = !pul_sta;
     PUL_minus(pul_sta);
     PY_Delay_semius_t(speed2delay_sus(set_speed));
-//    uint8_t receive_can_data[8];
-//    if(FDCAN1_Receive_Msg(receive_can_data))
-//    {
-//        printf("CAN Receive data: %s\r\n",receive_can_data);
-//    }
   }
   /* USER CODE END 3 */
 }
@@ -328,49 +323,47 @@ static void MX_IWDG1_Init(void)
 }
 
 /**
-  * @brief TIM1 Initialization Function
+  * @brief TIM3 Initialization Function
   * @param None
   * @retval None
   */
-static void MX_TIM1_Init(void)
+static void MX_TIM3_Init(void)
 {
 
-  /* USER CODE BEGIN TIM1_Init 0 */
+  /* USER CODE BEGIN TIM3_Init 0 */
 
-  /* USER CODE END TIM1_Init 0 */
+  /* USER CODE END TIM3_Init 0 */
 
   TIM_ClockConfigTypeDef sClockSourceConfig = {0};
   TIM_MasterConfigTypeDef sMasterConfig = {0};
 
-  /* USER CODE BEGIN TIM1_Init 1 */
+  /* USER CODE BEGIN TIM3_Init 1 */
 
-  /* USER CODE END TIM1_Init 1 */
-  htim1.Instance = TIM1;
-  htim1.Init.Prescaler = 0;
-  htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim1.Init.Period = 2143;
-  htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-  htim1.Init.RepetitionCounter = 0;
-  htim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
-  if (HAL_TIM_Base_Init(&htim1) != HAL_OK)
+  /* USER CODE END TIM3_Init 1 */
+  htim3.Instance = TIM3;
+  htim3.Init.Prescaler = 19999;
+  htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim3.Init.Period = 4999;
+  htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim3) != HAL_OK)
   {
     Error_Handler();
   }
   sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
-  if (HAL_TIM_ConfigClockSource(&htim1, &sClockSourceConfig) != HAL_OK)
+  if (HAL_TIM_ConfigClockSource(&htim3, &sClockSourceConfig) != HAL_OK)
   {
     Error_Handler();
   }
   sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
-  sMasterConfig.MasterOutputTrigger2 = TIM_TRGO2_RESET;
   sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
-  if (HAL_TIMEx_MasterConfigSynchronization(&htim1, &sMasterConfig) != HAL_OK)
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim3, &sMasterConfig) != HAL_OK)
   {
     Error_Handler();
   }
-  /* USER CODE BEGIN TIM1_Init 2 */
-
-  /* USER CODE END TIM1_Init 2 */
+  /* USER CODE BEGIN TIM3_Init 2 */
+    HAL_TIM_Base_Start_IT(&htim3);
+  /* USER CODE END TIM3_Init 2 */
 
 }
 
@@ -592,15 +585,16 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
     }
 
 }
-void HAL_TIM_TriggerCallback(TIM_HandleTypeDef *htim)
+
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
-    if(htim->Instance==TIM1)
+    if(htim==(&htim3))
     {
-        pul_sta = !pul_sta;
-        PUL_minus(pul_sta);
-        LED1GREEN(pul_sta);
+        LED0RED(LEDRED_Status);
+        LEDRED_Status = !LEDRED_Status;
     }
 }
+
 void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
 {
     if(hfdcan == &hfdcan1) {
@@ -627,6 +621,7 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
         }
     }
 }
+
 uint32_t speed2delay_sus(uint32_t speed)//speed 1r/min == 1/60000r/ms, 1ms = 2 * 1000 sus
 {
     if(speed==0)
