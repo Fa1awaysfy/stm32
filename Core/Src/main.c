@@ -73,14 +73,11 @@ static void MX_IWDG1_Init(void);
 static void MX_FDCAN1_Init(void);
 static void MX_TIM3_Init(void);
 /* USER CODE BEGIN PFP */
-void PY_semiusDelayTest(void);
-void PY_Delay_semius_t(uint32_t Delay);
-void PY_semiusDelayOptimize(void);
-void PY_Delay_semius(uint32_t Delay);
+void reload_tim3(uint32_t Period);//设置重装载的值，重新设置定时器时间
 
 void motor_init();
 
-uint32_t speed2delay_sus(uint32_t speed);//speed r/min
+uint32_t speed2Period(uint32_t speed);//speed r/min
 
 void dif_fluoresent_seed(uint8_t num_Light_Gate2);
 
@@ -97,23 +94,23 @@ uint8_t Global_Status_set(uint8_t command);
 #define LED1GREEN(n) (n ? HAL_GPIO_WritePin(GPIOB,GPIO_PIN_1,GPIO_PIN_SET): \
                 HAL_GPIO_WritePin(GPIOB,GPIO_PIN_1,GPIO_PIN_RESET)) //led1 PB1
 
-#define KEY_UP HAL_GPIO_ReadPin(GPIOA,GPIO_PIN_0) //KEY_UP  PA0
-#define KEY0 HAL_GPIO_ReadPin(GPIOH,GPIO_PIN_3) //KEY0  PH3
-#define KEY1 HAL_GPIO_ReadPin(GPIOH,GPIO_PIN_2) //KEY1  PH2
-#define KEY2 HAL_GPIO_ReadPin(GPIOC,GPIO_PIN_13) //KEY1  PC13
+//#define KEY_UP HAL_GPIO_ReadPin(GPIOA,GPIO_PIN_0) //KEY_UP  PA0
+//#define KEY0 HAL_GPIO_ReadPin(GPIOH,GPIO_PIN_3) //KEY0  PH3
+//#define KEY1 HAL_GPIO_ReadPin(GPIOH,GPIO_PIN_2) //KEY1  PH2
+#define KEY2 HAL_GPIO_ReadPin(GPIOC,GPIO_PIN_13) //KEY1  PC13（按键开关）
 
-#define Light_Gate1 HAL_GPIO_ReadPin(GPIOF,GPIO_PIN_6) //Light_Gate1  PF6
-#define Light_Gate2 HAL_GPIO_ReadPin(GPIOF,GPIO_PIN_7) //Light_Gate2  PF7
+#define Light_Gate1 HAL_GPIO_ReadPin(GPIOF,GPIO_PIN_6) //Light_Gate1  PF6（光电门1信号）
+#define Light_Gate2 HAL_GPIO_ReadPin(GPIOF,GPIO_PIN_7) //Light_Gate2  PF7（光电门2信号）
 
 #define PUL_minus(n) (n ? HAL_GPIO_WritePin(GPIOI,GPIO_PIN_5,GPIO_PIN_SET): \
-                HAL_GPIO_WritePin(GPIOI,GPIO_PIN_5,GPIO_PIN_RESET)) // Pulse signal PI5
-#define DIR_minus(n) (n ? HAL_GPIO_WritePin(GPIOI,GPIO_PIN_6,GPIO_PIN_SET): \
-                HAL_GPIO_WritePin(GPIOI,GPIO_PIN_6,GPIO_PIN_RESET)) // Direction signal PI6, unuseful
+                HAL_GPIO_WritePin(GPIOI,GPIO_PIN_5,GPIO_PIN_RESET)) // Pulse signal PI5（电机脉冲信号）
+//#define DIR_minus(n) (n ? HAL_GPIO_WritePin(GPIOI,GPIO_PIN_6,GPIO_PIN_SET): \
+//                HAL_GPIO_WritePin(GPIOI,GPIO_PIN_6,GPIO_PIN_RESET)) // Direction signal PI6, unuseful（正反转，弃用）
 #define ENA_minus(n) (n ? HAL_GPIO_WritePin(GPIOI,GPIO_PIN_7,GPIO_PIN_SET): \
-                HAL_GPIO_WritePin(GPIOI,GPIO_PIN_7,GPIO_PIN_RESET)) // Enable signal PI7
+                HAL_GPIO_WritePin(GPIOI,GPIO_PIN_7,GPIO_PIN_RESET)) // Enable signal PI7（电机启停接口）
 
 #define Spray_valve(n) (n ? HAL_GPIO_WritePin(GPIOH,GPIO_PIN_6,GPIO_PIN_SET): \
-                HAL_GPIO_WritePin(GPIOD,GPIO_PIN_5,GPIO_PIN_RESET)) // Spray valve PD5
+                HAL_GPIO_WritePin(GPIOD,GPIO_PIN_5,GPIO_PIN_RESET)) // Spray valve PD5(喷阀接口)
 /* USER CODE END 0 */
 
 /**
@@ -149,9 +146,7 @@ int main(void)
   MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
   motor_init();
-  PY_semiusDelayTest();
-  PY_semiusDelayOptimize();
-  printf("Motor control, pul_sta = %d, dir_sta = %d, ena_sta = %d\r\n",pul_sta,dir_sta,ena_sta);
+  printf("Motor control, pul_sta = %d, ena_sta = %d\r\n",pul_sta,ena_sta);
   HAL_UART_Receive_IT(&huart1, (uint8_t *)receive_usart1, USART_REC_LEN);
   /* USER CODE END 2 */
 
@@ -164,9 +159,6 @@ int main(void)
     /* USER CODE BEGIN 3 */
     HAL_IWDG_Refresh(&hiwdg1);
     HAL_UART_Receive_IT(&huart1, (uint8_t *)receive_usart1, USART_REC_LEN);
-    pul_sta = !pul_sta;
-    PUL_minus(pul_sta);
-    PY_Delay_semius_t(speed2delay_sus(set_speed));
   }
   /* USER CODE END 3 */
 }
@@ -344,9 +336,9 @@ static void MX_TIM3_Init(void)
 
   /* USER CODE END TIM3_Init 1 */
   htim3.Instance = TIM3;
-  htim3.Init.Prescaler = 19999;
+  htim3.Init.Prescaler = 1;
   htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim3.Init.Period = 4999;
+  htim3.Init.Period = 7;
   htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim3) != HAL_OK)
@@ -433,7 +425,6 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOH_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
-  __HAL_RCC_GPIOD_CLK_ENABLE();
   __HAL_RCC_GPIOI_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
@@ -460,8 +451,8 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_PULLDOWN;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PH2 PH3 */
-  GPIO_InitStruct.Pin = GPIO_PIN_2|GPIO_PIN_3;
+  /*Configure GPIO pin : PH3 */
+  GPIO_InitStruct.Pin = GPIO_PIN_3;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOH, &GPIO_InitStruct);
@@ -473,12 +464,6 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : PD5 */
-  GPIO_InitStruct.Pin = GPIO_PIN_5;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
-  GPIO_InitStruct.Pull = GPIO_PULLUP;
-  HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
-
   /*Configure GPIO pins : PI5 PI7 */
   GPIO_InitStruct.Pin = GPIO_PIN_5|GPIO_PIN_7;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
@@ -489,9 +474,6 @@ static void MX_GPIO_Init(void)
   /* EXTI interrupt init*/
   HAL_NVIC_SetPriority(EXTI0_IRQn, 9, 0);
   HAL_NVIC_EnableIRQ(EXTI0_IRQn);
-
-  HAL_NVIC_SetPriority(EXTI2_IRQn, 10, 0);
-  HAL_NVIC_EnableIRQ(EXTI2_IRQn);
 
   HAL_NVIC_SetPriority(EXTI3_IRQn, 11, 0);
   HAL_NVIC_EnableIRQ(EXTI3_IRQn);
@@ -516,7 +498,6 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
                 {
                     Gate1_seed_num = 1;
                 }
-
             }
             break;
         }case GPIO_PIN_7: {//light gate2 detect
@@ -553,9 +534,8 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 }
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
-    if(huart->Instance==USART1)//如果是串口1//串口1接收中断，接收来自工控屏的信息格式：从左往右共三位，第一位：状态（0：启动，1：暂停，2：终止），第二、三位为电机速度，第四位为回车
+    if(huart->Instance==USART1)//如果是串口1//串口1接收中断，接收来自工控屏的信息格式：从左往右共三位，第一位：状态（0：启动，1：暂停，2：终止），第二、三位为吸附轮速度，第四位为回车
     {
-        uint8_t temp_num=0;
         if(receive_usart1[3] == 0xd)//如果接收到的数据是回车
         {
             if(Global_Status_set(receive_usart1[0] != '0'))
@@ -567,7 +547,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
             {
                 receive_usart1[3] = '\0';
                 printf("receive_usart1 = %s\r\n",receive_usart1);
-                temp_num = (receive_usart1[0]-'0')*10 + (receive_usart1[1]-'0');
+                uint8_t temp_num = (receive_usart1[0]-'0')*10 + (receive_usart1[1]-'0');
                 set_speed = temp_num;
             }
         }
@@ -576,12 +556,12 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 
 }
 
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)//脉冲信号定时器中断
 {
-    if(htim==(&htim3))//定时500ms，红灯取反
+    if(htim==(&htim3) && ena_sta == 1)//送出脉冲信号
     {
-        LED0RED(LEDRED_Status);
-        LEDRED_Status = !LEDRED_Status;
+            PUL_minus(pul_sta);
+            pul_sta = !pul_sta;
     }
 }
 
@@ -612,75 +592,35 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
     }
 }
 
-uint32_t speed2delay_sus(uint32_t speed)//speed 1r/min == 1/60000r/ms, 1ms = 2 * 1000 sus
+uint32_t speed2Period(uint32_t speed)//speed 1r/min == 1/60000r/ms, 1ms = 1000 us
 {
     if(speed==0)
     {
         return 1000000;
     }
     uint16_t step = 6400; //check figure, current status is sw5 off, sw6 on, sw7 off, sw8 on.
-    delay_time =(1000.0 * 60000.0/(step*speed) + 0.5);
+    delay_time =(uint32_t)(500.0 * 60000.0/(step * speed) + 0.5);//1us为一个单位
     if(delay_time<3)
         delay_time = 3;
-    return delay_time;
+    return delay_time / 10;
 }
 
 void motor_init()
 {
     PUL_minus(pul_sta);
-    DIR_minus(dir_sta);
     ENA_minus(ena_sta);
 }
 
-void PY_semiusDelayTest(void)
+void reload_tim3(uint32_t Period)//Tout溢出时间us = (Prescaler+1) / Tlck *10000000us * (Period+1); Tlck= 200Mhz
 {
-    __IO uint32_t firstms, secondms;
-    __IO uint32_t counter = 0;
 
-    firstms = HAL_GetTick()+1;
-    secondms = firstms+1;
-
-    while(uwTick!=firstms) ;
-
-    while(uwTick!=secondms) counter++;
-
-    semiusDelayBase = ((float)counter)/2000;
+    htim3.Init.Period = Period;//周期数，计时周期数+1，即多少10us
+    if (HAL_TIM_Base_Init(&htim3) != HAL_OK)
+    {
+        Error_Handler();
+    }
 }
 
-void PY_Delay_semius_t(uint32_t Delay)
-{
-    __IO uint32_t delayReg;
-    __IO uint32_t semiusNum = (uint32_t)(Delay*semiusDelayBase);
-
-    delayReg = 0;
-    while(delayReg!=semiusNum) delayReg++;
-}
-
-void PY_semiusDelayOptimize(void)
-{
-    __IO uint32_t firstms, secondms;
-    __IO float coe = 1.0;
-
-    firstms = HAL_GetTick();
-    PY_Delay_semius_t(2000000) ;
-    secondms = HAL_GetTick();
-
-    coe = ((float)1000)/(secondms-firstms);
-    semiusDelayBase = coe*semiusDelayBase;
-}
-
-void PY_Delay_semius(uint32_t Delay)
-{
-    __IO uint32_t delayReg;
-
-    __IO uint32_t msNum = Delay/2000;
-    __IO uint32_t semiusNum = (uint32_t)((Delay%2000)*semiusDelayBase);
-
-    if(msNum>0) HAL_Delay(msNum);
-
-    delayReg = 0;
-    while(delayReg!=semiusNum) delayReg++;
-}
 void dif_fluoresent_seed(uint8_t num_Light_Gate2)
 {
     uint8_t temp = 0b1;
@@ -691,6 +631,7 @@ void dif_fluoresent_seed(uint8_t num_Light_Gate2)
     }
     else printf("Fail to match seed!\r\n");
 }
+
 uint8_t FDCAN1_Send_Msg(uint8_t * msg,uint32_t len)
 {
     TxHeader.Identifier=0x12;                           //32位ID
