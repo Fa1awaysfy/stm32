@@ -53,7 +53,7 @@ static uint8_t pul_sta=1,dir_sta=1,ena_sta=1;
 static uint32_t set_speed = 100;//set speed is 100 actually 70r/min motor output without reducer
 static uint32_t delay_time = 1000000;
 
-static uint8_t Gate1_seed_num = 1, Gate2_seed_num = 1;
+static uint8_t Gate1_seed_num = 0, Gate2_seed_num = 0;//seed number of each gate
 static uint32_t receive_seed_num = 0b0;
 static uint8_t receive_usart1[USART_REC_LEN];
 
@@ -86,15 +86,16 @@ void dif_fluoresent_seed(uint8_t num_Light_Gate2);
 
 uint8_t FDCAN1_Send_Msg(uint8_t * msg,uint32_t len);
 uint8_t FDCAN1_Receive_Msg(uint8_t *buf);
+uint8_t Global_Status_set(uint8_t command);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
 #define LED0RED(n) (n ? HAL_GPIO_WritePin(GPIOB,GPIO_PIN_0,GPIO_PIN_SET): \
-                HAL_GPIO_WritePin(GPIOB,GPIO_PIN_0,GPIO_PIN_RESET)) //led0
+                HAL_GPIO_WritePin(GPIOB,GPIO_PIN_0,GPIO_PIN_RESET)) //led0 PB0
 #define LED1GREEN(n) (n ? HAL_GPIO_WritePin(GPIOB,GPIO_PIN_1,GPIO_PIN_SET): \
-                HAL_GPIO_WritePin(GPIOB,GPIO_PIN_1,GPIO_PIN_RESET)) //led1
+                HAL_GPIO_WritePin(GPIOB,GPIO_PIN_1,GPIO_PIN_RESET)) //led1 PB1
 
 #define KEY_UP HAL_GPIO_ReadPin(GPIOA,GPIO_PIN_0) //KEY_UP  PA0
 #define KEY0 HAL_GPIO_ReadPin(GPIOH,GPIO_PIN_3) //KEY0  PH3
@@ -105,12 +106,14 @@ uint8_t FDCAN1_Receive_Msg(uint8_t *buf);
 #define Light_Gate2 HAL_GPIO_ReadPin(GPIOF,GPIO_PIN_7) //Light_Gate2  PF7
 
 #define PUL_minus(n) (n ? HAL_GPIO_WritePin(GPIOI,GPIO_PIN_5,GPIO_PIN_SET): \
-                HAL_GPIO_WritePin(GPIOI,GPIO_PIN_5,GPIO_PIN_RESET)) // Pulse signal
+                HAL_GPIO_WritePin(GPIOI,GPIO_PIN_5,GPIO_PIN_RESET)) // Pulse signal PI5
 #define DIR_minus(n) (n ? HAL_GPIO_WritePin(GPIOI,GPIO_PIN_6,GPIO_PIN_SET): \
-                HAL_GPIO_WritePin(GPIOI,GPIO_PIN_6,GPIO_PIN_RESET)) // Direction signal
+                HAL_GPIO_WritePin(GPIOI,GPIO_PIN_6,GPIO_PIN_RESET)) // Direction signal PI6, unuseful
 #define ENA_minus(n) (n ? HAL_GPIO_WritePin(GPIOI,GPIO_PIN_7,GPIO_PIN_SET): \
-                HAL_GPIO_WritePin(GPIOI,GPIO_PIN_7,GPIO_PIN_RESET)) // Enable signal
+                HAL_GPIO_WritePin(GPIOI,GPIO_PIN_7,GPIO_PIN_RESET)) // Enable signal PI7
 
+#define Spray_valve(n) (n ? HAL_GPIO_WritePin(GPIOH,GPIO_PIN_6,GPIO_PIN_SET): \
+                HAL_GPIO_WritePin(GPIOD,GPIO_PIN_5,GPIO_PIN_RESET)) // Spray valve PD5
 /* USER CODE END 0 */
 
 /**
@@ -430,6 +433,7 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOH_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
+  __HAL_RCC_GPIOD_CLK_ENABLE();
   __HAL_RCC_GPIOI_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
@@ -469,6 +473,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
+  /*Configure GPIO pin : PD5 */
+  GPIO_InitStruct.Pin = GPIO_PIN_5;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
+
   /*Configure GPIO pins : PI5 PI7 */
   GPIO_InitStruct.Pin = GPIO_PIN_5|GPIO_PIN_7;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
@@ -498,41 +508,20 @@ static void MX_GPIO_Init(void)
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
     switch (GPIO_Pin) {
-        case GPIO_PIN_0: {//key_up high voltage enable
-            if (KEY_UP == 1) {
-            }
-            break;
-        }
-        case GPIO_PIN_2: {//key1
-            if (KEY1 == 0) {// plus velocity
-               set_speed += 7;
-                printf("speed up to %lu!\r\n",set_speed);
-            }
-            break;
-        }
-        case GPIO_PIN_3: {//key0
-            if (KEY0 == 0) {// minus velocity
-                if(set_speed > 7)
-                    set_speed -= 7;
-                else
-                    set_speed = 0;
-                printf("speed down to %lu!\r\n",set_speed);
-            }
-            break;
-        }
-        case GPIO_PIN_6: {
+        case GPIO_PIN_6: {//light gate1 detect
             if (Light_Gate1 == 0) {
-                printf("No %d passed! \r\n",Gate1_seed_num);
+                printf("No. %d passed! \r\n",Gate1_seed_num);
                 ++Gate1_seed_num;
                 if(Gate1_seed_num > 32)
                 {
                     Gate1_seed_num = 1;
                 }
+
             }
             break;
-        }case GPIO_PIN_7: {
+        }case GPIO_PIN_7: {//light gate2 detect
             if (Light_Gate2 == 0) {
-                printf("No %d passed\r\n",Gate2_seed_num);
+                printf("No. %d passed\r\n",Gate2_seed_num);
                 if(Gate2_seed_num > Gate1_seed_num){
                     printf("Error, Gate2_seed_num > Gate1_seed_num\r\n");
                     break;
@@ -564,21 +553,22 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 }
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
-    if(huart->Instance==USART1)//如果是串口1
+    if(huart->Instance==USART1)//如果是串口1//串口1接收中断，接收来自工控屏的信息格式：从左往右共三位，第一位：状态（0：启动，1：暂停，2：终止），第二、三位为电机速度，第四位为回车
     {
         uint8_t temp_num=0;
-        if(receive_usart1[2] == 0xd && receive_usart1[0]>='0' && receive_usart1[0]<='9'
-            &&receive_usart1[1]>= '0' && receive_usart1[1]<='9')//如果接收到的数据是回车
+        if(receive_usart1[3] == 0xd)//如果接收到的数据是回车
         {
-            receive_usart1[2] = '\0';
-            printf("receive_usart1 = %s\r\n",receive_usart1);
-            temp_num = (receive_usart1[0]-'0')*10 + (receive_usart1[1]-'0');
-            if(temp_num<=32 && temp_num>0)
+            if(Global_Status_set(receive_usart1[0] != '0'))
             {
-                if(FDCAN1_Send_Msg(receive_usart1,USART_REC_LEN))
-                    printf("send data to CAN1 success!\r\n");
-                else
-                    printf("send data to CAN1 failed!\r\n");
+                printf("Status stop/pause!");
+            }
+            else
+                if( receive_usart1[1]>='0' && receive_usart1[1]<='9' &&receive_usart1[2]>= '0' && receive_usart1[2]<='9')
+            {
+                receive_usart1[3] = '\0';
+                printf("receive_usart1 = %s\r\n",receive_usart1);
+                temp_num = (receive_usart1[0]-'0')*10 + (receive_usart1[1]-'0');
+                set_speed = temp_num;
             }
         }
         HAL_UART_Receive_IT(&huart1, (uint8_t*)receive_usart1, USART_REC_LEN);
@@ -588,7 +578,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
-    if(htim==(&htim3))
+    if(htim==(&htim3))//定时500ms，红灯取反
     {
         LED0RED(LEDRED_Status);
         LEDRED_Status = !LEDRED_Status;
@@ -597,7 +587,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 
 void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
 {
-    if(hfdcan == &hfdcan1) {
+    if(hfdcan == &hfdcan1) {//如果是CAN1,接收上位机发送的荧光种子代码
         if ((RxFifo0ITs & FDCAN_IT_RX_FIFO0_NEW_MESSAGE) != RESET) {
             Error_Handler();
         }
@@ -723,6 +713,22 @@ uint8_t FDCAN1_Receive_Msg(uint8_t *buf)
     return RxHeader.DataLength>>16;
 }
 
+uint8_t Global_Status_set(uint8_t command)
+{
+    switch (command) {
+        case 0:{
+            ENA_minus(1);
+        }
+        case 1:{
+            ENA_minus(0);
+        }
+        case 2:{
+            if(Gate1_seed_num && Gate2_seed_num == 0)//if Gate1 and Gate2 are empty for a while, then stop the motor
+                ENA_minus(0);
+        }
+    }
+    return command;
+}
 /* USER CODE END 4 */
 
 /**
