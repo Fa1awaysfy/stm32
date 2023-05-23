@@ -547,8 +547,8 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
             {
                 receive_usart1[3] = '\0';
                 printf("receive_usart1 = %s\r\n",receive_usart1);
-                uint8_t temp_num = (receive_usart1[0]-'0')*10 + (receive_usart1[1]-'0');
-                set_speed = temp_num;
+                set_speed = (receive_usart1[0]-'0')*10 + (receive_usart1[1]-'0');
+                reload_tim3(speed2Period(set_speed));//设置脉冲信号频率
             }
         }
         HAL_UART_Receive_IT(&huart1, (uint8_t*)receive_usart1, USART_REC_LEN);
@@ -567,7 +567,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)//脉冲信号定时器中断
 
 void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
 {
-    if(hfdcan == &hfdcan1) {//如果是CAN1,接收上位机发送的荧光种子代码
+    if(hfdcan == &hfdcan1) {//如果是CAN1,接收上位机发送的荧光种子代码，格式：从左往右数共三位，第一、二位：荧光种子代码，第三位为回车
         if ((RxFifo0ITs & FDCAN_IT_RX_FIFO0_NEW_MESSAGE) != RESET) {
             Error_Handler();
         }
@@ -602,8 +602,8 @@ uint32_t speed2Period(uint32_t speed)//speed 1r/min == 1/60000r/ms, 1ms = 1000 u
     delay_time =(uint32_t)(500.0 * 60000.0/(step * speed) + 0.5);//1us为一个单位
     if(delay_time<3)
         delay_time = 3;
-    return delay_time / 10;
-}
+    return delay_time - 1;
+}//速度转为脉冲信号周期
 
 void motor_init()
 {
@@ -614,7 +614,7 @@ void motor_init()
 void reload_tim3(uint32_t Period)//Tout溢出时间us = (Prescaler+1) / Tlck *10000000us * (Period+1); Tlck= 200Mhz
 {
 
-    htim3.Init.Period = Period;//周期数，计时周期数+1，即多少10us
+    htim3.Init.Period = Period;//周期数，计时周期数+1，即多少1us = （199+1）/200Mhz * 1000000000us
     if (HAL_TIM_Base_Init(&htim3) != HAL_OK)
     {
         Error_Handler();
