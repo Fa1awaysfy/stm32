@@ -48,7 +48,8 @@ TIM_HandleTypeDef htim3;
 UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
-__IO float semiusDelayBase;
+static uint8_t machine_sta = 0;//machine status
+static uint8_t plane_sta=1,spray_sta=1;
 static uint8_t pul_sta=1,dir_sta=1,ena_sta=1;
 static uint32_t set_speed = 100;//set speed is 100 actually 70r/min motor output without reducer
 static uint32_t delay_time = 1000000;
@@ -58,6 +59,7 @@ static uint32_t receive_seed_num = 0b0;
 static uint8_t receive_usart1[USART_REC_LEN];
 
 static uint8_t LEDRED_Status= 0, LEDGREEN_Status = 0;
+
 FDCAN_TxHeaderTypeDef TxHeader;
 uint8_t *TxData;
 
@@ -99,8 +101,14 @@ uint8_t Global_Status_set(uint8_t command);
 //#define KEY1 HAL_GPIO_ReadPin(GPIOH,GPIO_PIN_2) //KEY1  PH2
 #define KEY2 HAL_GPIO_ReadPin(GPIOC,GPIO_PIN_13) //KEY1  PC13（按键开关）
 
-#define Light_Gate1 HAL_GPIO_ReadPin(GPIOF,GPIO_PIN_6) //Light_Gate1  PF6（光电门1信号）
-#define Light_Gate2 HAL_GPIO_ReadPin(GPIOF,GPIO_PIN_7) //Light_Gate2  PF7（光电门2信号）
+#define Plane(n) (n ? HAL_GPIO_WritePin(GPIOD,GPIO_PIN_1,GPIO_PIN_SET): \
+                HAL_GPIO_WritePin(GPIOD,GPIO_PIN_1,GPIO_PIN_RESET)) // plane PD1(挡板接口)
+                
+#define Spray_valve(n) (n ? HAL_GPIO_WritePin(GPIOD,GPIO_PIN_2,GPIO_PIN_SET): \
+                HAL_GPIO_WritePin(GPIOD,GPIO_PIN_2,GPIO_PIN_RESET)) // Spray valve PD2(喷阀接口)
+
+#define Light_Gate1 HAL_GPIO_ReadPin(GPIOD,GPIO_PIN_6) //Light_Gate1  PD6（光电门1信号）
+#define Light_Gate2 HAL_GPIO_ReadPin(GPIOD,GPIO_PIN_7) //Light_Gate2  PD7（光电门2信号）
 
 #define PUL_minus(n) (n ? HAL_GPIO_WritePin(GPIOI,GPIO_PIN_5,GPIO_PIN_SET): \
                 HAL_GPIO_WritePin(GPIOI,GPIO_PIN_5,GPIO_PIN_RESET)) // Pulse signal PI5（电机脉冲信号）
@@ -109,8 +117,6 @@ uint8_t Global_Status_set(uint8_t command);
 #define ENA_minus(n) (n ? HAL_GPIO_WritePin(GPIOI,GPIO_PIN_7,GPIO_PIN_SET): \
                 HAL_GPIO_WritePin(GPIOI,GPIO_PIN_7,GPIO_PIN_RESET)) // Enable signal PI7（电机启停接口）
 
-#define Spray_valve(n) (n ? HAL_GPIO_WritePin(GPIOH,GPIO_PIN_6,GPIO_PIN_SET): \
-                HAL_GPIO_WritePin(GPIOD,GPIO_PIN_5,GPIO_PIN_RESET)) // Spray valve PD5(喷阀接口)
 /* USER CODE END 0 */
 
 /**
@@ -336,7 +342,7 @@ static void MX_TIM3_Init(void)
 
   /* USER CODE END TIM3_Init 1 */
   htim3.Instance = TIM3;
-  htim3.Init.Prescaler = 1;
+  htim3.Init.Prescaler = 199;
   htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim3.Init.Period = 7;
   htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
@@ -420,42 +426,19 @@ static void MX_GPIO_Init(void)
   GPIO_InitTypeDef GPIO_InitStruct = {0};
 
   /* GPIO Ports Clock Enable */
-  __HAL_RCC_GPIOC_CLK_ENABLE();
-  __HAL_RCC_GPIOF_CLK_ENABLE();
-  __HAL_RCC_GPIOA_CLK_ENABLE();
-  __HAL_RCC_GPIOH_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
+  __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOD_CLK_ENABLE();
   __HAL_RCC_GPIOI_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0|GPIO_PIN_1, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOD, GPIO_PIN_1|GPIO_PIN_2, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOI, GPIO_PIN_5|GPIO_PIN_7, GPIO_PIN_SET);
-
-  /*Configure GPIO pin : PC13 */
-  GPIO_InitStruct.Pin = GPIO_PIN_13;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
-  GPIO_InitStruct.Pull = GPIO_PULLUP;
-  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : PF6 PF7 */
-  GPIO_InitStruct.Pin = GPIO_PIN_6|GPIO_PIN_7;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
-  GPIO_InitStruct.Pull = GPIO_PULLUP;
-  HAL_GPIO_Init(GPIOF, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : PA0 */
-  GPIO_InitStruct.Pin = GPIO_PIN_0;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
-  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : PH3 */
-  GPIO_InitStruct.Pin = GPIO_PIN_3;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
-  GPIO_InitStruct.Pull = GPIO_PULLUP;
-  HAL_GPIO_Init(GPIOH, &GPIO_InitStruct);
 
   /*Configure GPIO pins : PB0 PB1 */
   GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1;
@@ -463,6 +446,19 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : PD1 PD2 */
+  GPIO_InitStruct.Pin = GPIO_PIN_1|GPIO_PIN_2;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : PD3 PD4 PD6 PD7 */
+  GPIO_InitStruct.Pin = GPIO_PIN_3|GPIO_PIN_4|GPIO_PIN_6|GPIO_PIN_7;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
 
   /*Configure GPIO pins : PI5 PI7 */
   GPIO_InitStruct.Pin = GPIO_PIN_5|GPIO_PIN_7;
@@ -472,17 +468,8 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_Init(GPIOI, &GPIO_InitStruct);
 
   /* EXTI interrupt init*/
-  HAL_NVIC_SetPriority(EXTI0_IRQn, 9, 0);
-  HAL_NVIC_EnableIRQ(EXTI0_IRQn);
-
-  HAL_NVIC_SetPriority(EXTI3_IRQn, 11, 0);
-  HAL_NVIC_EnableIRQ(EXTI3_IRQn);
-
-  HAL_NVIC_SetPriority(EXTI9_5_IRQn, 5, 0);
+  HAL_NVIC_SetPriority(EXTI9_5_IRQn, 3, 0);
   HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
-
-  HAL_NVIC_SetPriority(EXTI15_10_IRQn, 14, 0);
-  HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 
 }
 
@@ -553,7 +540,6 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
         }
         HAL_UART_Receive_IT(&huart1, (uint8_t*)receive_usart1, USART_REC_LEN);
     }
-
 }
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)//脉冲信号定时器中断
@@ -613,12 +599,7 @@ void motor_init()
 
 void reload_tim3(uint32_t Period)//Tout溢出时间us = (Prescaler+1) / Tlck *10000000us * (Period+1); Tlck= 200Mhz
 {
-
     htim3.Init.Period = Period;//周期数，计时周期数+1，即多少1us = （199+1）/200Mhz * 1000000000us
-    if (HAL_TIM_Base_Init(&htim3) != HAL_OK)
-    {
-        Error_Handler();
-    }
 }
 
 void dif_fluoresent_seed(uint8_t num_Light_Gate2)
@@ -627,9 +608,15 @@ void dif_fluoresent_seed(uint8_t num_Light_Gate2)
     temp = temp<<num_Light_Gate2;
     if(receive_seed_num&temp)
     {
+        spray_sta = 1;
+        Spray_valve(spray_sta);
         printf("Match successfully!\r\n");//use Spray valve here
     }
-    else printf("Fail to match seed!\r\n");
+    else
+    {
+        printf("Fail to match seed!\r\n");
+        spray_sta = 0;
+    }
 }
 
 uint8_t FDCAN1_Send_Msg(uint8_t * msg,uint32_t len)
