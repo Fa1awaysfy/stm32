@@ -535,7 +535,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
                 receive_usart1[3] = '\0';
                 printf("receive_usart1 = %s\r\n",receive_usart1);
                 set_speed = (receive_usart1[0]-'0')*10 + (receive_usart1[1]-'0');
-                reload_tim3(speed2Period(set_speed));//设置脉冲信号频率
+//                reload_tim3(speed2Period(set_speed));//设置脉冲信号频率，不能在此处设置，可能定时器处于工作中期
             }
         }
         HAL_UART_Receive_IT(&huart1, (uint8_t*)receive_usart1, USART_REC_LEN);
@@ -548,6 +548,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)//脉冲信号定时器中断
     {
             PUL_minus(pul_sta);
             pul_sta = !pul_sta;
+        reload_tim3(speed2Period(set_speed));//周期结束重设定时器
     }
 }
 
